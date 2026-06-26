@@ -158,6 +158,68 @@ box-shadow:0 0 20px red;
 
 }
 
+.searchBox{
+margin:25px auto;
+text-align:center;
+}
+
+.searchBox input{
+width:90%;
+max-width:500px;
+padding:14px;
+font-size:18px;
+border:2px solid red;
+border-radius:12px;
+background:#111;
+color:white;
+outline:none;
+box-shadow:0 0 15px rgba(255,0,0,.4);
+transition:.3s;
+}
+
+.searchBox input:focus{
+box-shadow:0 0 25px red;
+}
+.gallery{
+display:grid;
+grid-template-columns:repeat(auto-fit,minmax(280px,1fr));
+gap:20px;
+margin-top:30px;
+}
+
+.item{
+background:#151515;
+border:2px solid red;
+border-radius:15px;
+padding:20px;
+box-shadow:0 0 15px rgba(255,0,0,.4);
+transition:.3s;
+}
+
+.item:hover{
+transform:translateY(-6px);
+box-shadow:0 0 25px red;
+}
+
+.item h3{
+margin-bottom:15px;
+color:#ff4d4d;
+}
+
+.pixel{
+font-size:22px;
+line-height:22px;
+white-space:pre;
+background:#0b0b0b;
+padding:15px;
+border-radius:10px;
+overflow:auto;
+}
+
+.copyBtn{
+margin-top:15px;
+width:100%;
+}
 footer{
 
 text-align:center;
@@ -167,7 +229,6 @@ padding:30px;
 background:#111;
 
 margin-top:40px;
-
 }
 
 </style>
@@ -196,6 +257,13 @@ margin-top:40px;
 
 </nav>
 
+<div class="searchBox">
+<input
+type="text"
+id="search"
+placeholder="🔍 جستجوی شخصیت..."
+>
+</div>
 <div class="container">
 
 <div class="card">
@@ -214,17 +282,96 @@ Entity 303، اسکلت، ویلیجر، مرغ، کریپر و...
 
 <br>
 
-<button>
+<button onclick="goGallery()">
 
 🚀 ورود به گالری
 
 </button>
 </div>
+</div>
+
+<!-- اینجا کد گالری را قرار بده -->
+
+<h2 style="margin-top:40px;">🎮 گالری شکل‌ها</h2>
+
+<div class="gallery" id="gallery">
+
+<div class="item" data-name="Minecraft Chicken">
+
+<h3>Minecraft Chicken</h3>
+
+<div class="pixel">
+
+⬜⬜⬜⬜⬜⬜⬜⬜
+⬜⬜⬛⬜⬜⬛⬜⬜
+⬜⬜🟨🟨🟨🟨⬜⬜
+⬜⬜🟨🟨🟨🟨⬜⬜
+⬜⬜⬜🟥🟥⬜⬜⬜
+⬜⬜⬜🟥🟥⬜⬜⬜
+⬜⬜⬜🟥🟥⬜⬜⬜
+⬜⬜⬜⬜⬜⬜⬜⬜
+
+</div>
+
+<button class="copyBtn" onclick="copyShape(this)">
+
+📋 کپی شکل
+
+</button>
+</div>
+
+</div>
 
 <footer>
 © 2026 ♕𝚖𝚎𝚑𝚛𝚜𝚊𝚖 𝚐𝚊𝚖𝚎𝚛♕
 </footer>
+<script>
 
+function goGallery(){
+    document.getElementById("gallery").scrollIntoView({
+        behavior:"smooth"
+    });
+}
+
+const search=document.getElementById("search");
+
+search.addEventListener("keyup",function(){
+
+    let value=this.value.toLowerCase();
+    let items=document.querySelectorAll(".item");
+
+    items.forEach(function(item){
+
+        let title=item.dataset.name.toLowerCase();
+
+        if(title.includes(value)){
+            item.style.display="block";
+        }else{
+            item.style.display="none";
+        }
+
+    });
+
+});
+
+function copyShape(button){
+
+    const shape =
+    button.parentElement.querySelector(".pixel").innerText;
+
+    navigator.clipboard.writeText(shape);
+
+    button.innerHTML="✅ کپی شد";
+
+    setTimeout(function(){
+
+        button.innerHTML="📋 کپی شکل";
+
+    },1500);
+
+}
+
+</script>
 </body>
 
 </html>
