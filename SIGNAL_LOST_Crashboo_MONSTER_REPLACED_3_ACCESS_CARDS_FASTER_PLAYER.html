@@ -1,0 +1,999 @@
+<!DOCTYPE html>
+<html lang="fa">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>SIGNAL LOST — تاسیسات ۹</title>
+<style>
+  html,body{margin:0;padding:0;overflow:hidden;background:#000;height:100%;width:100%;
+    font-family:'Courier New',monospace;user-select:none;-webkit-user-select:none;touch-action:none;}
+  #c{position:fixed;inset:0;display:block;}
+  #vignette{position:fixed;inset:0;pointer-events:none;
+    box-shadow:inset 0 0 220px 60px rgba(0,0,0,0.95);z-index:5;}
+  #grain{position:fixed;inset:0;pointer-events:none;z-index:6;opacity:0.06;mix-blend-mode:overlay;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");}
+
+  #hud{position:fixed;inset:0;pointer-events:none;z-index:10;color:#c8d0d0;}
+  #topbar{position:absolute;top:14px;left:14px;right:14px;display:flex;justify-content:space-between;
+    align-items:flex-start;font-size:12px;letter-spacing:1px;text-shadow:0 0 6px #000;}
+  #keys{background:rgba(0,0,0,0.35);border:1px solid rgba(180,40,40,0.5);padding:6px 12px;border-radius:3px;}
+  #keys b{color:#e05555;}
+  #statusText{background:rgba(0,0,0,0.35);border:1px solid rgba(120,120,140,0.4);padding:6px 12px;
+    border-radius:3px;max-width:46%;text-align:right;color:#9aa;transition:color .3s;}
+  #statusText.danger{color:#ff4444;border-color:#ff4444;animation:pulse 0.6s infinite;}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+
+  #crosshair{position:absolute;top:50%;left:50%;width:6px;height:6px;margin:-3px;
+    border-radius:50%;background:rgba(255,255,255,0.5);}
+
+  #heartbeat{position:fixed;inset:0;pointer-events:none;z-index:4;background:radial-gradient(ellipse at center, rgba(140,0,0,0) 40%, rgba(160,0,0,0.7) 100%);
+    opacity:0;transition:opacity .2s;}
+
+  #joyBase{position:fixed;left:26px;bottom:26px;width:110px;height:110px;border-radius:50%;
+    background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.2);z-index:20;touch-action:none;}
+  #joyNub{position:absolute;left:35px;top:35px;width:40px;height:40px;border-radius:50%;
+    background:rgba(255,255,255,0.25);border:1px solid rgba(255,255,255,0.4);}
+  #lookZone{position:fixed;inset:0;z-index:15;touch-action:none;}
+  #flashBtn{position:fixed;right:22px;bottom:34px;width:64px;height:64px;border-radius:50%;
+    background:rgba(255,200,80,0.12);border:2px solid rgba(255,200,80,0.5);color:#ffd27a;
+    font-size:22px;display:flex;align-items:center;justify-content:center;z-index:20;touch-action:none;}
+  #flashBtn.off{opacity:0.35;}
+
+  .overlay{position:fixed;inset:0;z-index:50;display:flex;flex-direction:column;align-items:center;
+    justify-content:center;text-align:center;background:rgba(0,0,0,0.92);color:#ccc;padding:24px;}
+  .overlay h1{font-size:26px;letter-spacing:4px;color:#e05555;margin-bottom:8px;
+    text-shadow:0 0 12px rgba(224,85,85,0.7);}
+  .overlay p{font-size:14px;line-height:1.9;max-width:420px;color:#9aa1a6;}
+  .btn{margin-top:22px;padding:12px 30px;background:transparent;border:1px solid #e05555;color:#e05555;
+    font-family:inherit;font-size:14px;letter-spacing:2px;border-radius:2px;cursor:pointer;}
+  .btn:active{background:rgba(224,85,85,0.2);}
+  .hidden{display:none !important;}
+  #jumpFlash{position:fixed;inset:0;background:#900;opacity:0;z-index:60;pointer-events:none;}
+  small.dim{color:#666;display:block;margin-top:16px;font-size:11px;letter-spacing:1px;}
+
+  /* Horrific Terrifying Jumpscare Overlay */
+  #scareOverlay{position:fixed;inset:0;z-index:9999;background:#030000;display:flex;flex-direction:column;align-items:center;justify-content:center;overflow:hidden;}
+  #scareFlash{position:absolute;inset:-50%;background:radial-gradient(circle,#ff1111 0%,#770000 35%,#000 80%);opacity:0;animation:strobe 0.06s infinite alternate;}
+  @keyframes strobe{0%{opacity:0.2;}100%{opacity:0.9;}}
+  #scareFace{position:relative;width:min(95vw,750px);height:min(95vh,750px);display:flex;align-items:center;justify-content:center;filter:contrast(2.2) brightness(1.2) drop-shadow(0 0 50px #f00);animation:scareShake 0.04s infinite alternate;}
+  @keyframes scareShake{0%{transform:scale(1.3) translate(-15px, -10px) rotate(-3deg);}100%{transform:scale(1.5) translate(15px, 12px) rotate(4deg);}}
+  #scareBloodOverlay{position:absolute;inset:0;background:radial-gradient(ellipse at center, rgba(255,0,0,0.4) 0%, rgba(0,0,0,0.9) 100%);pointer-events:none;mix-blend-mode:color-burn;}
+  #scareText{position:absolute;bottom:8%;font:bold 900 8vw/1 monospace;color:#ff1111;text-shadow:0 0 20px #f00, 0 0 50px #000;letter-spacing:6px;animation:textGlitch 0.08s infinite alternate;}
+  @keyframes textGlitch{0%{opacity:0.8;transform:skewX(-10deg);}100%{opacity:1;transform:skewX(10deg);}}
+
+#bloodGuide{position:fixed;inset:0;z-index:7;pointer-events:none;}
+.bloodArrow{position:absolute;color:#8b0000;font-size:34px;font-weight:900;text-shadow:0 0 8px #000,0 0 3px #f00;transform-origin:center;opacity:.9;}
+.bloodArrow::after{content:'➤';}
+#guideText{position:absolute;left:50%;bottom:12%;transform:translateX(-50%);color:#9d2020;font-size:11px;letter-spacing:2px;text-shadow:0 0 8px #000;opacity:.75;}
+#exitGuide{position:absolute;right:18px;top:50%;color:#d33;font-size:12px;letter-spacing:2px;text-shadow:0 0 8px #000;opacity:0;transition:opacity .3s;}
+</style>
+</head>
+<body>
+
+<canvas id="c"></canvas>
+<div id="vignette"></div>
+<div id="grain"></div>
+<div id="heartbeat"></div>
+
+<div id="hud">
+  <div id="topbar">
+    <div id="keys">کارت‌های دسترسی: <b><span id="keyCount">0</span>/3</b></div>
+    <div id="statusText"><span id="statusMsg">سکوت مطلق...</span></div>
+  </div>
+  <div id="crosshair"></div>
+</div>
+
+<div id="lookZone"></div>
+<div id="joyBase"><div id="joyNub"></div></div>
+<div id="flashBtn">🔦</div>
+
+<div id="jumpFlash"></div>
+<div id="bloodGuide">
+  <div class="bloodArrow" style="left:18%;top:30%;transform:rotate(18deg)">➤</div>
+  <div class="bloodArrow" style="left:34%;top:23%;transform:rotate(52deg)">➤</div>
+  <div class="bloodArrow" style="left:61%;top:28%;transform:rotate(118deg)">➤</div>
+  <div class="bloodArrow" style="left:77%;top:42%;transform:rotate(160deg)">➤</div>
+  <div id="guideText">FOLLOW THE BLOOD</div>
+  <div id="exitGuide">EXIT →</div>
+</div>
+
+<div class="overlay" id="startScreen">
+  <h1>SIGNAL LOST</h1>
+  <p>
+    تاسیسات شماره ۹ در تاریکی مطلق فرو رفته است.
+    ۳ کارت دسترسی را پیدا کن تا خروج باز شود.<br><br>
+    کراش‌بو (Crashboo) در سایه‌ها قدم می‌زند و صدای حرکاتت را می‌شنود.
+    وقتی صحبت می‌کند یا نزدیک می‌شود بی‌صدا باش!
+  </p>
+  <button class="btn" id="startBtn">ورود به تاسیسات</button>
+  <small class="dim">دسته‌ی چپ: حرکت &nbsp;|&nbsp; کشیدن روی صفحه: نگاه &nbsp;|&nbsp; دکمه راست: چراغ‌قوه<br>
+  دسکتاپ: WASD / Arrow Keys جهت حرکت</small>
+</div>
+
+<div class="overlay hidden" id="deathScreen">
+  <h1 style="color:#ff2222">SYSTEM CRASH</h1>
+  <p id="deathMsg">سیگنال حیاطی قطعی پیدا کرد. کراش‌بو شما را نابود کرد.</p>
+  <button class="btn" id="retryBtn">تلاش دوباره</button>
+</div>
+
+<div class="overlay hidden" id="winScreen">
+  <h1 style="color:#5fe08a;text-shadow:0 0 12px rgba(95,224,138,.7)">فرار موفقیت‌آمیز</h1>
+  <p>دیوار فوقانی روی کراش‌بو فروریخت و او زیر آوار متلاشی شد. شما زنده ماندید!</p>
+  <button class="btn" id="againBtn">دوباره بازی کن</button>
+</div>
+
+<!-- Terrifying Jumpscare UI -->
+<div id="scareOverlay" class="hidden">
+  <div id="scareFlash"></div>
+  <div id="scareBloodOverlay"></div>
+  <div id="scareFace">
+    <!-- Detailed Laptop Horror Face SVG Structure -->
+    <svg viewBox="0 0 500 500" style="width:100%;height:100%;">
+      <!-- Laptop Outer Body -->
+      <rect x="50" y="40" width="400" height="300" rx="15" fill="#111216" stroke="#440000" stroke-width="8"/>
+      <rect x="70" y="60" width="360" height="260" rx="8" fill="#040206"/>
+      <!-- Screaming Veiny Eyes -->
+      <circle cx="170" cy="160" r="60" fill="#f5eedc" stroke="#880000" stroke-width="4"/>
+      <circle cx="330" cy="160" r="60" fill="#f5eedc" stroke="#880000" stroke-width="4"/>
+      <!-- Red Veins in Eyes -->
+      <path d="M130 160 Q150 150 170 160 M170 120 Q160 140 170 160 M200 180 Q180 170 170 160" stroke="#cc0000" stroke-width="3" fill="none"/>
+      <path d="M290 160 Q310 150 330 160 M330 120 Q320 140 330 160 M360 180 Q340 170 330 160" stroke="#cc0000" stroke-width="3" fill="none"/>
+      <!-- Irises -->
+      <circle cx="170" cy="160" r="28" fill="#15b838"/>
+      <circle cx="170" cy="160" r="12" fill="#000"/>
+      <circle cx="330" cy="160" r="28" fill="#a020f0"/>
+      <circle cx="330" cy="160" r="12" fill="#000"/>
+      <!-- Bloody Mouth & Sharp Teeth -->
+      <path d="M 120 250 Q 250 330 380 250 Q 250 280 120 250 Z" fill="#000" stroke="#aa0000" stroke-width="4"/>
+      <!-- Jagged Teeth -->
+      <polygon points="140,253 150,275 160,254" fill="#fff"/>
+      <polygon points="170,255 185,282 200,257" fill="#fff"/>
+      <polygon points="210,258 225,288 240,259" fill="#fff"/>
+      <polygon points="250,259 265,288 280,259" fill="#fff"/>
+      <polygon points="290,258 305,282 320,256" fill="#fff"/>
+      <polygon points="330,255 342,275 355,253" fill="#fff"/>
+      <polygon points="155,272 165,255 175,270" fill="#eee"/>
+      <polygon points="195,275 205,258 215,275" fill="#eee"/>
+      <polygon points="235,278 245,259 255,278" fill="#eee"/>
+      <polygon points="275,278 285,259 295,276" fill="#eee"/>
+      <polygon points="315,273 325,256 335,270" fill="#eee"/>
+      <!-- Lower Base / Keyboard -->
+      <polygon points="30,340 470,340 430,420 70,420" fill="#181920" stroke="#300" stroke-width="4"/>
+      <line x1="100" y1="360" x2="400" y2="360" stroke="#333" stroke-width="6"/>
+      <line x1="90" y1="380" x2="410" y2="380" stroke="#333" stroke-width="6"/>
+      <line x1="80" y1="400" x2="420" y2="400" stroke="#333" stroke-width="6"/>
+    </svg>
+  </div>
+  <div id="scareText">SYSTEM ERROR</div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+/* ============================= AUDIO SYSTEM ============================= */
+let actx=null, ambientGain, alarmGain;
+let sirenOsc=null;
+
+function initAudio(){
+  if(actx) return;
+  actx = new (window.AudioContext||window.webkitAudioContext)();
+
+  ambientGain = actx.createGain(); ambientGain.gain.value=0.08;
+  const padFilter = actx.createBiquadFilter(); padFilter.type='lowpass'; padFilter.frequency.value=750;
+  ambientGain.connect(padFilter); padFilter.connect(actx.destination);
+
+  // Dark drone pads
+  [40, 52, 63.5, 80].forEach((f,i)=>{
+    const o = actx.createOscillator(); o.type = i%2===0 ? 'sawtooth':'sine'; o.frequency.value = f;
+    const g = actx.createGain(); g.gain.value = 0.15/(i+1);
+    o.connect(g); g.connect(ambientGain);
+    o.start();
+  });
+
+  // Emergency Siren Sound
+  sirenOsc = actx.createOscillator(); sirenOsc.type='triangle';
+  sirenOsc.frequency.value = 400;
+  alarmGain = actx.createGain(); alarmGain.gain.value = 0.04;
+  
+  const lfo = actx.createOscillator(); lfo.frequency.value = 0.8;
+  const lfoGain = actx.createGain(); lfoGain.gain.value = 180;
+  lfo.connect(lfoGain); lfoGain.connect(sirenOsc.frequency);
+  
+  sirenOsc.connect(alarmGain); alarmGain.connect(actx.destination);
+  sirenOsc.start(); lfo.start();
+}
+
+function footstepSound(){
+  if(!actx) return;
+  const bufferSize = actx.sampleRate*0.04;
+  const buffer = actx.createBuffer(1,bufferSize,actx.sampleRate);
+  const data = buffer.getChannelData(0);
+  for(let i=0;i<bufferSize;i++) data[i]=(Math.random()*2-1)*0.4;
+  const src = actx.createBufferSource(); src.buffer=buffer;
+  const filt = actx.createBiquadFilter(); filt.type='lowpass'; filt.frequency.value=220;
+  const g = actx.createGain(); g.gain.value=0.18;
+  src.connect(filt); filt.connect(g); g.connect(actx.destination);
+  src.start();
+}
+
+function pickupChime(){
+  if(!actx) return;
+  const o = actx.createOscillator(); o.type='sine';
+  const g = actx.createGain(); g.gain.value=0.2;
+  o.connect(g); g.connect(actx.destination);
+  o.frequency.setValueAtTime(520, actx.currentTime);
+  o.frequency.exponentialRampToValueAtTime(1100, actx.currentTime+0.25);
+  g.gain.exponentialRampToValueAtTime(0.001, actx.currentTime+0.35);
+  o.start(); o.stop(actx.currentTime+0.36);
+}
+
+/* HORRIFIC JUMPSCARE SOUND GENERATOR */
+function playScareSound(){
+  if(!actx) return;
+  const now = actx.currentTime;
+  
+  // Screaming Sawtooth Oscillator
+  const saw = actx.createOscillator();
+  saw.type = 'sawtooth';
+  saw.frequency.setValueAtTime(650, now);
+  saw.frequency.exponentialRampToValueAtTime(80, now + 1.2);
+
+  // Sub-bass heavy impact
+  const sub = actx.createOscillator();
+  sub.type = 'square';
+  sub.frequency.setValueAtTime(140, now);
+  sub.frequency.linearRampToValueAtTime(30, now + 1.2);
+
+  // Noise burst
+  const bSize = actx.sampleRate * 1.2;
+  const buffer = actx.createBuffer(1, bSize, actx.sampleRate);
+  const bData = buffer.getChannelData(0);
+  for(let i=0; i<bSize; i++) bData[i] = (Math.random()*2-1);
+  const noise = actx.createBufferSource(); noise.buffer = buffer;
+  const nFilt = actx.createBiquadFilter(); nFilt.type='bandpass'; nFilt.frequency.value = 1600;
+
+  const mGain = actx.createGain();
+  mGain.gain.setValueAtTime(0.95, now);
+  mGain.gain.exponentialRampToValueAtTime(0.001, now + 1.25);
+
+  saw.connect(mGain);
+  sub.connect(mGain);
+  noise.connect(nFilt); nFilt.connect(mGain);
+  mGain.connect(actx.destination);
+
+  saw.start(now); sub.start(now); noise.start(now);
+  saw.stop(now+1.25); sub.stop(now+1.25); noise.stop(now+1.25);
+}
+
+/* SPEECH SYNTHESIS - DEEP MASCULINE MONSTER VOICE */
+const crashbooPhrases = [
+  "I CAN HEAR YOUR HEARTBEAT",
+  "THERE IS NO ESCAPE FROM FACILITY NINE",
+  "I SEE YOU IN THE DARK",
+  "YOUR SIGNAL IS FAILING",
+  "YOU CANNOT RUN FROM CRASHBOO"
+];
+let lastSpeakTime = 0;
+
+function speakCrashbooLine(overrideText){
+  const now = performance.now();
+  if(!overrideText && now - lastSpeakTime < 9000) return;
+  lastSpeakTime = now;
+
+  if('speechSynthesis' in window){
+    window.speechSynthesis.cancel();
+    const text = overrideText || crashbooPhrases[Math.floor(Math.random()*crashbooPhrases.length)];
+    const utter = new SpeechSynthesisUtterance(text);
+    utter.rate = 0.72; // Slow, menacing pacing
+    utter.pitch = 0.22; // Deep monster pitch
+    utter.volume = 1.0;
+
+    const voices = window.speechSynthesis.getVoices();
+    // Prefer male voices
+    const maleVoice = voices.find(v => v.lang.startsWith('en') && (v.name.includes('David') || v.name.includes('Mark') || v.name.includes('Male') || v.name.includes('Google US English')));
+    if(maleVoice) utter.voice = maleVoice;
+
+    window.speechSynthesis.speak(utter);
+  }
+}
+
+/* ============================= MAP & OBSTACLES ============================= */
+const CELL = 4;
+const GRID_W = 18, GRID_H = 14;
+const grid = [];
+for(let z=0; z<GRID_H; z++){
+  const row=[];
+  for(let x=0;x<GRID_W;x++) row.push((x===0||x===GRID_W-1||z===0||z===GRID_H-1)?1:0);
+  grid.push(row);
+}
+
+// Dead-ends and Obstacles layout
+const innerWalls = [
+  [3,2],[3,3],[3,4],[3,6],[3,7],[3,8],[3,9],[3,11],
+  [6,2],[6,4],[6,5],[6,7],[6,9],[6,10],[6,11],
+  [9,2],[9,3],[9,5],[9,6],[9,8],[9,9],[9,11],[9,12],
+  [12,2],[12,4],[12,6],[12,7],[12,9],[12,11],
+  [15,3],[15,4],[15,5],[15,8],[15,9],[15,10]
+];
+innerWalls.forEach(([x,z])=>{ if(z<GRID_H && x<GRID_W) grid[z][x]=1; });
+
+const DOOR_CELL = {x:17, z:11};
+grid[DOOR_CELL.z][DOOR_CELL.x] = 0;
+let doorLocked = true;
+
+function cellToWorld(gx,gz){ return {x: gx*CELL + CELL/2, z: gz*CELL + CELL/2}; }
+function isWallCell(gx,gz){
+  if(gx<0||gz<0||gx>=GRID_W||gz>=GRID_H) return true;
+  return grid[gz][gx]===1;
+}
+function circleHitsCell(x,z,r,gx,gz){
+  const minX=gx*CELL, maxX=minX+CELL, minZ=gz*CELL, maxZ=minZ+CELL;
+  const cx=Math.max(minX,Math.min(x,maxX)), cz=Math.max(minZ,Math.min(z,maxZ));
+  const dx=x-cx, dz=z-cz;
+  return dx*dx+dz*dz < r*r;
+}
+function isBlocked(x,z,r){
+  const gx=Math.floor(x/CELL), gz=Math.floor(z/CELL);
+  for(let ix=gx-1;ix<=gx+1;ix++) for(let iz=gz-1;iz<=gz+1;iz++){
+    if(isWallCell(ix,iz) && circleHitsCell(x,z,r,ix,iz)) return true;
+  }
+  if(doorLocked){
+    const dp = cellToWorld(DOOR_CELL.x, DOOR_CELL.z);
+    if(Math.abs(x-dp.x)<2.2 && Math.abs(z-dp.z)<2.2) return true;
+  }
+  return false;
+}
+function openCells(){
+  const list=[];
+  for(let z=1; z<GRID_H-1; z++) for(let x=1;x<GRID_W-1;x++) if(grid[z][x]===0) list.push([x,z]);
+  return list;
+}
+
+/* ============================= THREE.JS SETUP ============================= */
+const canvas = document.getElementById('c');
+const renderer = new THREE.WebGLRenderer({canvas, antialias:true});
+renderer.setPixelRatio(Math.min(window.devicePixelRatio,2));
+renderer.setSize(window.innerWidth, window.innerHeight);
+
+const scene = new THREE.Scene();
+scene.fog = new THREE.FogExp2(0x020000, 0.05);
+
+const camera = new THREE.PerspectiveCamera(70, window.innerWidth/window.innerHeight, 0.1, 100);
+
+window.addEventListener('resize', ()=>{
+  camera.aspect = window.innerWidth/window.innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(window.innerWidth, window.innerHeight);
+});
+
+scene.add(new THREE.AmbientLight(0x0e0606, 0.4));
+
+// Player Flashlight
+const flashlight = new THREE.SpotLight(0xffedd0, 3.4, 20, Math.PI/5.8, 0.5, 1.2);
+camera.add(flashlight);
+flashlight.position.set(0,0,0);
+flashlight.target.position.set(0,0,-1);
+camera.add(flashlight.target);
+scene.add(camera);
+let flashOn = true;
+
+// Textures & Materials
+function makeWallTexture(){
+  const cnv = document.createElement('canvas'); cnv.width=256; cnv.height=256;
+  const ctx = cnv.getContext('2d');
+  ctx.fillStyle = '#22252a'; ctx.fillRect(0,0,256,256);
+  ctx.strokeStyle = '#111316'; ctx.lineWidth = 4; ctx.strokeRect(0,0,256,256);
+  // Blood Splatters on Walls
+  for(let i=0;i<5;i++){
+    ctx.fillStyle = 'rgba(120,0,0,0.35)';
+    ctx.beginPath(); ctx.arc(Math.random()*256, Math.random()*256, 12+Math.random()*20, 0, Math.PI*2); ctx.fill();
+  }
+  return new THREE.CanvasTexture(cnv);
+}
+const wallTex = makeWallTexture();
+const wallMat = new THREE.MeshStandardMaterial({map:wallTex, roughness:0.85, metalness:0.1});
+const floorMat = new THREE.MeshStandardMaterial({color:0x111317, roughness:0.95});
+const ceilMat = new THREE.MeshStandardMaterial({color:0x08090b, roughness:1.0});
+
+const worldW = GRID_W*CELL, worldD = GRID_H*CELL;
+const floor = new THREE.Mesh(new THREE.PlaneGeometry(worldW, worldD), floorMat);
+floor.rotation.x = -Math.PI/2; floor.position.set(worldW/2,0,worldD/2);
+scene.add(floor);
+
+const ceil = new THREE.Mesh(new THREE.PlaneGeometry(worldW, worldD), ceilMat);
+ceil.rotation.x = Math.PI/2; ceil.position.set(worldW/2, 3.2, worldD/2);
+scene.add(ceil);
+
+// Build Wall Meshes
+const wallGeo = new THREE.BoxGeometry(CELL, 3.2, CELL);
+for(let z=0; z<GRID_H; z++) for(let x=0; x<GRID_W; x++){
+  if(grid[z][x]===1){
+    const m = new THREE.Mesh(wallGeo, wallMat);
+    m.position.set(x*CELL+CELL/2, 1.6, z*CELL+CELL/2);
+    scene.add(m);
+  }
+}
+
+/* Dim Red Emergency Lights */
+const emergencyLights = [];
+const redLightSpots = [[2,2],[8,4],[14,3],[5,9],[11,10],[16,8]];
+redLightSpots.forEach(([gx,gz])=>{
+  const p = cellToWorld(gx,gz);
+  const light = new THREE.PointLight(0xff0000, 0.7, 8, 2);
+  light.position.set(p.x, 2.8, p.z);
+  scene.add(light);
+  
+  // Fixture mesh
+  const fix = new THREE.Mesh(new THREE.CylinderGeometry(0.15,0.15,0.2), new THREE.MeshBasicMaterial({color:0xff0000}));
+  fix.position.set(p.x, 3.1, p.z);
+  scene.add(fix);
+  emergencyLights.push({light, baseIntensity:0.7});
+});
+
+/* Facility Props & Obstacles (Tables, Statues, Blood Puddles) */
+const props = [];
+function addProps(){
+  const free = openCells();
+  // Tables
+  for(let i=0;i<8;i++){
+    const c = free[Math.floor(Math.random()*free.length)];
+    const p = cellToWorld(c[0],c[1]);
+    const table = new THREE.Mesh(new THREE.BoxGeometry(1.4, 0.7, 0.9), new THREE.MeshStandardMaterial({color:0x2d3138, roughness:0.7}));
+    table.position.set(p.x+(Math.random()-0.5), 0.35, p.z+(Math.random()-0.5));
+    scene.add(table);
+  }
+  // Statues / Mannequins
+  for(let i=0;i<5;i++){
+    const c = free[Math.floor(Math.random()*free.length)];
+    const p = cellToWorld(c[0],c[1]);
+    const statue = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.3, 1.8, 6), new THREE.MeshStandardMaterial({color:0x555a60, roughness:0.5}));
+    statue.position.set(p.x, 0.9, p.z);
+    scene.add(statue);
+  }
+  // Blood Puddles
+  for(let i=0;i<10;i++){
+    const c = free[Math.floor(Math.random()*free.length)];
+    const p = cellToWorld(c[0],c[1]);
+    const puddle = new THREE.Mesh(new THREE.CircleGeometry(0.8+Math.random()*0.6, 8), new THREE.MeshStandardMaterial({color:0x660000, roughness:0.2}));
+    puddle.rotation.x = -Math.PI/2;
+    puddle.position.set(p.x, 0.01, p.z);
+    scene.add(puddle);
+  }
+}
+addProps();
+
+// Door Mesh
+const doorMesh = new THREE.Mesh(new THREE.BoxGeometry(0.5, 3.2, CELL-0.2), new THREE.MeshStandardMaterial({color:0x441111, roughness:0.6, emissive:0x220000}));
+{
+  const dp = cellToWorld(DOOR_CELL.x, DOOR_CELL.z);
+  doorMesh.position.set(dp.x, 1.6, dp.z);
+}
+scene.add(doorMesh);
+
+/* ============================= PICKUP KEYS ============================= */
+const freeCells = openCells();
+const keySpots = [];
+while(keySpots.length<3){
+  const c = freeCells[Math.floor(Math.random()*freeCells.length)];
+  if(Math.hypot(c[0]-2, c[1]-2) > 6 && !keySpots.some(k=>k[0]===c[0]&&k[1]===c[1])) keySpots.push(c);
+}
+
+const keyMeshes = [];
+const keyGeo = new THREE.OctahedronGeometry(0.32, 0);
+const keyMat = new THREE.MeshStandardMaterial({color:0x3fd0ff, emissive:0x1c6f88, emissiveIntensity:1.5, metalness:0.8});
+keySpots.forEach(c=>{
+  const p = cellToWorld(c[0],c[1]);
+  const mesh = new THREE.Mesh(keyGeo, keyMat.clone());
+  mesh.position.set(p.x, 1.1, p.z);
+  const light = new THREE.PointLight(0x3fd0ff, 0.9, 4, 2);
+  light.position.copy(mesh.position);
+  scene.add(mesh); scene.add(light);
+  keyMeshes.push({mesh, light, collected:false});
+});
+let keysCollected = 0;
+
+/* ================= ACCESS CARDS + EXIT DOOR ================= */
+const exitLabel = document.createElement('div');
+exitLabel.id = 'exitLabel';
+exitLabel.style.cssText = 'position:fixed;left:50%;top:58%;transform:translateX(-50%);z-index:11;color:#ff5555;font:12px Courier New,monospace;letter-spacing:2px;text-shadow:0 0 8px #000;pointer-events:none;display:none;';
+exitLabel.textContent = 'EXIT — 3 ACCESS CARDS REQUIRED';
+document.body.appendChild(exitLabel);
+
+function updateExitHint(){
+  const dp = cellToWorld(DOOR_CELL.x, DOOR_CELL.z);
+  const d = Math.hypot(player.x-dp.x, player.z-dp.z);
+  exitLabel.style.display = d < 7 ? 'block' : 'none';
+  if(d < 2.0){
+    if(doorLocked) setStatus('در خروجی قفل است — ۳ کارت دسترسی لازم است.', true);
+    else setStatus('خروجی باز است — فرار کن!');
+  }
+}
+
+/* ============================= PLAYER (INCREASED SPEED) ============================= */
+// Player speed boosted to 4.8 for crisp, responsive movement
+const player = { x: cellToWorld(2,2).x, z: cellToWorld(2,2).z, yaw:0, pitch:0, speed:6.0 };
+camera.position.set(player.x, 1.6, player.z);
+
+/* ============================= CRASHBOO MONSTER MODEL ============================= */
+const crashbooGroup = new THREE.Group();
+
+function buildCrashbooModel(){
+  // Crashboo model from the uploaded SIGNAL LOST design — no GLB/external asset needed.
+  const group = crashbooGroup;
+
+  const metalMat = new THREE.MeshStandardMaterial({
+    color:0x2b3038, metalness:0.85, roughness:0.35
+  });
+  const darkMat = new THREE.MeshStandardMaterial({
+    color:0x0c0e12, metalness:0.9, roughness:0.2
+  });
+  const redEmissive = new THREE.MeshStandardMaterial({
+    color:0xff1111, emissive:0xff0000, emissiveIntensity:3.5
+  });
+
+  // CRT face: kept procedural so this replacement remains self-contained.
+  const faceCanvas = document.createElement('canvas');
+  faceCanvas.width = 512; faceCanvas.height = 384;
+  const fctx = faceCanvas.getContext('2d');
+  fctx.fillStyle = '#020205';
+  fctx.fillRect(0,0,512,384);
+  fctx.fillStyle = '#260000';
+  fctx.fillRect(18,18,476,348);
+  fctx.strokeStyle = '#5a0000';
+  fctx.lineWidth = 5;
+  fctx.strokeRect(18,18,476,348);
+  fctx.fillStyle = '#ff1111';
+  fctx.shadowColor = '#ff0000';
+  fctx.shadowBlur = 28;
+  fctx.beginPath(); fctx.ellipse(165,145,48,62,0,0,Math.PI*2); fctx.fill();
+  fctx.beginPath(); fctx.ellipse(347,145,48,62,0,0,Math.PI*2); fctx.fill();
+  fctx.shadowBlur = 0;
+  fctx.fillStyle = '#000';
+  fctx.fillRect(110,235,292,62);
+  fctx.fillStyle = '#eee';
+  for(let i=0;i<9;i++){
+    const x=125+i*32;
+    fctx.beginPath();
+    fctx.moveTo(x,235); fctx.lineTo(x+16,235); fctx.lineTo(x+8,266); fctx.closePath(); fctx.fill();
+  }
+  const faceTex = new THREE.CanvasTexture(faceCanvas);
+  faceTex.needsUpdate = true;
+  const faceMat = new THREE.MeshStandardMaterial({
+    map:faceTex, emissiveMap:faceTex, emissive:0xffffff, emissiveIntensity:2.2
+  });
+
+  // Torso / engine core
+  const torso = new THREE.Mesh(new THREE.BoxGeometry(1.1,1.3,0.8), metalMat);
+  torso.position.y = 1.6;
+  group.add(torso);
+
+  const core = new THREE.Mesh(new THREE.SphereGeometry(0.35,12,12), redEmissive);
+  core.position.set(0,1.6,0.38);
+  group.add(core);
+
+  // CRT screen head
+  const screenHead = new THREE.Group();
+  screenHead.position.set(0,2.5,0);
+
+  const headBox = new THREE.Mesh(new THREE.BoxGeometry(1.3,1.0,0.7), darkMat);
+  screenHead.add(headBox);
+
+  const facePlane = new THREE.Mesh(new THREE.PlaneGeometry(1.1,0.8), faceMat);
+  facePlane.position.set(0,0,0.36);
+  screenHead.add(facePlane);
+
+  // Horns / antennas
+  const horn1 = new THREE.Mesh(new THREE.ConeGeometry(0.1,0.6,4), redEmissive);
+  horn1.position.set(-0.5,0.7,0);
+  horn1.rotation.z=0.3;
+  const horn2 = horn1.clone();
+  horn2.position.x=0.5;
+  horn2.rotation.z=-0.3;
+  screenHead.add(horn1,horn2);
+
+  group.add(screenHead);
+
+  // Four spider/mecha legs
+  const legPivots=[];
+  for(let i=0;i<4;i++){
+    const legPivot=new THREE.Group();
+    const side=(i%2===0)?1:-1;
+    const forward=(i<2)?0.3:-0.3;
+    legPivot.position.set(side*0.55,1.3,forward);
+
+    const upperLeg=new THREE.Mesh(
+      new THREE.CylinderGeometry(0.06,0.05,0.9), metalMat
+    );
+    upperLeg.position.set(side*0.25,-0.4,0);
+    upperLeg.rotation.z=side*-0.4;
+    legPivot.add(upperLeg);
+
+    const lowerLeg=new THREE.Mesh(
+      new THREE.CylinderGeometry(0.04,0.02,1.0), darkMat
+    );
+    lowerLeg.position.set(side*0.5,-1.0,0);
+    lowerLeg.rotation.z=side*0.2;
+    legPivot.add(lowerLeg);
+
+    group.add(legPivot);
+    legPivots.push(legPivot);
+  }
+
+  // Claws / arms
+  const armPivots=[];
+  [-1,1].forEach(side=>{
+    const armPivot=new THREE.Group();
+    armPivot.position.set(side*0.65,1.8,0.2);
+
+    const arm=new THREE.Mesh(
+      new THREE.CylinderGeometry(0.06,0.04,1.1), metalMat
+    );
+    arm.position.set(0,-0.5,0.2);
+    arm.rotation.x=-0.5;
+    armPivot.add(arm);
+
+    // Small claw tips
+    for(let i=0;i<2;i++){
+      const claw=new THREE.Mesh(new THREE.ConeGeometry(0.035,0.22,5),darkMat);
+      claw.position.set(side*(0.08+i*0.07),-1.02,0.28);
+      claw.rotation.z=side*0.35;
+      armPivot.add(claw);
+    }
+
+    group.add(armPivot);
+    armPivots.push(armPivot);
+  });
+
+  // Red light aura for visibility in the dark
+  const aura=new THREE.PointLight(0xff2222,2.5,12,1.5);
+  aura.position.set(0,2.2,0);
+  group.add(aura);
+
+  // Subtle idle animation references
+  group.userData.crashbooLegs=legPivots;
+  group.userData.crashbooArms=armPivots;
+}
+buildCrashbooModel();
+scene.add(crashbooGroup);
+
+/* Enemy AI State */
+const crashboo = {
+  x: cellToWorld(10,8).x,
+  z: cellToWorld(10,8).z,
+  state: 'patrol',
+  target: null,
+  speed: 2.8,
+  viewDist: 38, // Broad FOV distance
+  fovAngle: Math.PI * 0.83 // ~170 degrees vision
+};
+crashbooGroup.position.set(crashboo.x, 0, crashboo.z);
+
+function pickPatrolTarget(){
+  const free = openCells();
+  const c = free[Math.floor(Math.random()*free.length)];
+  return cellToWorld(c[0],c[1]);
+}
+crashboo.target = pickPatrolTarget();
+
+/* ============================= CONTROLS & INPUT ============================= */
+const keysDown = {};
+window.addEventListener('keydown', e=>{
+  keysDown[e.key.toLowerCase()]=true;
+  if(e.key.toLowerCase()==='f') toggleFlash();
+});
+window.addEventListener('keyup', e=> keysDown[e.key.toLowerCase()]=false);
+
+// Virtual Joystick for Mobile
+let joyActive=false, joyId=null, joyVec={x:0,y:0};
+const joyBase = document.getElementById('joyBase');
+const joyNub = document.getElementById('joyNub');
+
+joyBase.addEventListener('pointerdown', e=>{ joyActive=true; joyId=e.pointerId; joyBase.setPointerCapture(e.pointerId); });
+window.addEventListener('pointermove', e=>{
+  if(joyActive && e.pointerId===joyId){
+    const r = joyBase.getBoundingClientRect();
+    const cx = r.left+r.width/2, cy = r.top+r.height/2;
+    let dx = e.clientX-cx, dy = e.clientY-cy;
+    const max = r.width/2;
+    const len = Math.hypot(dx,dy);
+    if(len>max){ dx = dx/len*max; dy = dy/len*max; }
+    joyVec.x = dx/max; joyVec.y = dy/max;
+    joyNub.style.left = (35+dx*0.7)+'px'; joyNub.style.top = (35+dy*0.7)+'px';
+  }
+});
+function endJoy(e){ if(e.pointerId===joyId){ joyActive=false; joyId=null; joyVec.x=0; joyVec.y=0; joyNub.style.left='35px'; joyNub.style.top='35px'; } }
+window.addEventListener('pointerup', endJoy); window.addEventListener('pointercancel', endJoy);
+
+// Touch Look Zone
+let lookId=null, lastLX=0, lastLY=0;
+const lookZone = document.getElementById('lookZone');
+lookZone.addEventListener('pointerdown', e=>{
+  if(e.target.closest && e.target.closest('#joyBase,#flashBtn')) return;
+  lookId = e.pointerId; lastLX=e.clientX; lastLY=e.clientY;
+  lookZone.setPointerCapture(e.pointerId);
+});
+lookZone.addEventListener('pointermove', e=>{
+  if(lookId===e.pointerId){
+    const dx = e.clientX-lastLX, dy = e.clientY-lastLY;
+    lastLX=e.clientX; lastLY=e.clientY;
+    player.yaw -= dx*0.0035;
+    player.pitch -= dy*0.0035;
+    player.pitch = Math.max(-1.1, Math.min(1.1, player.pitch));
+  }
+});
+function endLook(e){ if(e.pointerId===lookId) lookId=null; }
+lookZone.addEventListener('pointerup', endLook); lookZone.addEventListener('pointercancel', endLook);
+
+const flashBtn = document.getElementById('flashBtn');
+function toggleFlash(){
+  flashOn = !flashOn;
+  flashlight.intensity = flashOn ? 3.4 : 0;
+  flashBtn.classList.toggle('off', !flashOn);
+}
+flashBtn.addEventListener('pointerdown', e=>{ e.stopPropagation(); toggleFlash(); });
+
+/* ============================= GAME ENGINE LOGIC ============================= */
+let gameActive = false;
+const statusMsg = document.getElementById('statusMsg');
+const statusText = document.getElementById('statusText');
+const keyCountEl = document.getElementById('keyCount');
+const heartbeatEl = document.getElementById('heartbeat');
+
+function setStatus(msg, danger){
+  statusMsg.textContent = msg;
+  statusText.classList.toggle('danger', !!danger);
+}
+
+let stepTimer = 0;
+
+function updatePlayer(dt){
+  let mx=0, mz=0;
+  if(keysDown['w']||keysDown['arrowup']) mz -= 1;
+  if(keysDown['s']||keysDown['arrowdown']) mz += 1;
+  if(keysDown['a']||keysDown['arrowleft']) mx -= 1;
+  if(keysDown['d']||keysDown['arrowright']) mx += 1;
+  mx += joyVec.x; mz += joyVec.y;
+  
+  const len = Math.hypot(mx,mz);
+  const moving = len>0.08;
+  if(moving){ mx/=len; mz/=len; }
+
+  // Check sprint (Shift key) -> Boost speed up to 6.8
+  const currentSpeed = (keysDown['shift']) ? player.speed * 1.42 : player.speed;
+
+  const sin = Math.sin(player.yaw), cos = Math.cos(player.yaw);
+  const worldDX = mx*cos - mz*sin;
+  const worldDZ = mx*sin + mz*cos;
+
+  const dist = currentSpeed*dt*Math.min(len,1);
+  const r = 0.35;
+  let nx = player.x + worldDX*dist;
+  if(!isBlocked(nx, player.z, r)) player.x = nx;
+  let nz = player.z + worldDZ*dist;
+  if(!isBlocked(player.x, nz, r)) player.z = nz;
+
+  if(moving){
+    stepTimer -= dt;
+    if(stepTimer<=0){ footstepSound(); stepTimer = flashOn?0.32:0.42; }
+  }
+
+  camera.position.set(player.x, 1.6, player.z);
+  camera.rotation.order='YXZ';
+  camera.rotation.y = player.yaw;
+  camera.rotation.x = player.pitch;
+}
+
+function updateKeys(){
+  keyMeshes.forEach(k=>{
+    if(k.collected) return;
+    k.mesh.rotation.y += 0.03;
+    k.mesh.position.y = 1.1 + Math.sin(performance.now()*0.0025)*0.08;
+    if(Math.hypot(k.mesh.position.x-player.x, k.mesh.position.z-player.z) < 1.4){
+      k.collected = true;
+      scene.remove(k.mesh); scene.remove(k.light);
+      keysCollected++;
+      keyCountEl.textContent = keysCollected;
+      pickupChime();
+      setStatus('کارت دسترسی دریافت شد.');
+      if(keysCollected>=3){
+        doorLocked = false;
+        doorMesh.material.color.set(0x225522);
+        doorMesh.material.emissive.set(0x004400);
+        setStatus('در خروجی اصلی باز شد!');
+      }
+    }
+  });
+}
+
+function updateCrashboo(dt){
+  const dx = player.x - crashboo.x;
+  const dz = player.z - crashboo.z;
+  const dist = Math.hypot(dx,dz);
+
+  // Vision Test
+  let canSee = false;
+  if(dist < (flashOn ? crashboo.viewDist : 10)){
+    const forward = new THREE.Vector3(0,0,1).applyAxisAngle(new THREE.Vector3(0,1,0), crashbooGroup.rotation.y);
+    const toPlayer = new THREE.Vector3(dx, 0, dz).normalize();
+    const angle = forward.angleTo(toPlayer);
+    if(angle < crashboo.fovAngle/2) canSee = true;
+  }
+
+  if(canSee || dist < 4){
+    if(crashboo.state !== 'chase'){
+      crashboo.state = 'chase';
+      speakCrashbooLine();
+      setStatus('!حمله کراش‌بو — فرار کن', true);
+    }
+  }
+
+  // Wall collision for Crashboo: move on each axis separately.
+  const crashbooRadius = 0.72;
+  function moveCrashbooSafe(mx, mz){
+    const nx = crashboo.x + mx;
+    const nz = crashboo.z + mz;
+    if(!isBlocked(nx, crashboo.z, crashbooRadius)) crashboo.x = nx;
+    if(!isBlocked(crashboo.x, nz, crashbooRadius)) crashboo.z = nz;
+  }
+
+  if(crashboo.state === 'chase'){
+    const chaseSpeed = 3.8;
+    if(dist > 0.001){
+      const nx = dx/dist, nz = dz/dist;
+      moveCrashbooSafe(nx * chaseSpeed * dt, nz * chaseSpeed * dt);
+    }
+
+    if(dist < 1.1){
+      triggerJumpscare();
+    }
+  } else {
+    // Patrol Logic
+    if(!crashboo.target || Math.hypot(crashboo.target.x-crashboo.x, crashboo.target.z-crashboo.z)<0.8){
+      crashboo.target = pickPatrolTarget();
+    }
+    const tdx = crashboo.target.x - crashboo.x;
+    const tdz = crashboo.target.z - crashboo.z;
+    const tDist = Math.hypot(tdx, tdz);
+    if(tDist > 0.001){
+      moveCrashbooSafe((tdx/tDist) * crashboo.speed * dt, (tdz/tDist) * crashboo.speed * dt);
+    }
+
+    if(Math.random()<0.005) speakCrashbooLine();
+  }
+
+  crashbooGroup.position.set(crashboo.x, Math.sin(performance.now()*0.008)*0.05, crashboo.z);
+  crashbooGroup.rotation.y = Math.atan2(dx, dz);
+
+  // Heartbeat Intensity
+  const heartIntensity = Math.max(0, 1 - dist/20);
+  heartbeatEl.style.opacity = heartIntensity;
+}
+
+let exitSequence=false, exitTimer=0;
+function checkWin(){
+  const dp=cellToWorld(DOOR_CELL.x,DOOR_CELL.z);
+  const d=Math.hypot(player.x-dp.x,player.z-dp.z);
+  document.getElementById('exitGuide').style.opacity=(!doorLocked&&d<8)?'1':'0';
+  if(!doorLocked&&d<1.8&&!exitSequence) startExitSequence();
+}
+function startExitSequence(){
+  if(exitSequence)return;
+  exitSequence=true; gameActive=false;
+  setStatus('خروج... کراش‌بو می‌آید!',true);
+  speakCrashbooLine("YOU THOUGHT YOU ESCAPED");
+  const dp=cellToWorld(DOOR_CELL.x,DOOR_CELL.z);
+  crashboo.x=dp.x-12; crashboo.z=dp.z;
+  crashbooGroup.position.set(crashboo.x,0,crashboo.z);
+  const run=()=>{
+    const dx=dp.x-crashboo.x,dz=dp.z-crashboo.z,d=Math.hypot(dx,dz);
+    if(d>0.8){
+      crashboo.x+=dx/d*5.8*0.016; crashboo.z+=dz/d*5.8*0.016;
+      crashbooGroup.position.set(crashboo.x,0,crashboo.z);
+      crashbooGroup.rotation.y=Math.atan2(player.x-crashboo.x,player.z-crashboo.z);
+      requestAnimationFrame(run);
+    }else{
+      setStatus('دیوار فرو می‌ریزد!',true); speakCrashbooLine("NO ESCAPE");
+      setTimeout(()=>{
+        crashbooGroup.scale.set(1.15,0.08,1.15);
+        setTimeout(()=>{crashbooGroup.visible=false;document.getElementById('winScreen').classList.remove('hidden');},900);
+      },700);
+    }
+  };
+  run();
+}
+
+/* HORRIFIC JUMPSCARE TRIGGER */
+function triggerJumpscare(){
+  if(!gameActive) return;
+  gameActive = false;
+  
+  playScareSound();
+  speakCrashbooLine("YOU ARE MINE");
+
+  const scareOverlay = document.getElementById('scareOverlay');
+  scareOverlay.classList.remove('hidden');
+
+  setTimeout(()=>{
+    scareOverlay.classList.add('hidden');
+    document.getElementById('deathScreen').classList.remove('hidden');
+  }, 1600);
+}
+
+function winGameCinematic(){
+  if(!gameActive) return;
+  gameActive = false;
+  
+  // Cinematic Wall Collapse on Crashboo
+  setStatus('دیوار فوقانی فروریخت!', true);
+  speakCrashbooLine("NOOOOOOO");
+  
+  crashbooGroup.scale.set(1, 0.1, 1); // Crush Crashboo
+  setTimeout(()=>{
+    document.getElementById('winScreen').classList.remove('hidden');
+  }, 1200);
+}
+
+function resetGame(){
+  player.x = cellToWorld(2,2).x;
+  player.z = cellToWorld(2,2).z;
+  player.yaw=0; player.pitch=0;
+  keysCollected=0; keyCountEl.textContent=0;
+  doorLocked = true;
+  doorMesh.material.color.set(0x441111);
+  doorMesh.material.emissive.set(0x220000);
+
+  keyMeshes.forEach(k=>{
+    if(k.collected){ scene.add(k.mesh); scene.add(k.light); k.collected=false; }
+  });
+
+  crashboo.x = cellToWorld(10,8).x;
+  crashboo.z = cellToWorld(10,8).z;
+  crashboo.state = 'patrol';
+  crashbooGroup.scale.set(1,1,1);
+  crashbooGroup.visible = true;
+  exitSequence=false;
+  exitTimer=0;
+  crashboo.target = pickPatrolTarget();
+
+  flashOn = true; flashlight.intensity=3.4; flashBtn.classList.remove('off');
+  setStatus('سکوت مطلق...');
+  document.getElementById('deathScreen').classList.add('hidden');
+  document.getElementById('winScreen').classList.add('hidden');
+  gameActive = true;
+}
+
+/* ============================= GAME ANIMATION LOOP ============================= */
+let lastT = performance.now();
+function animate(){
+  requestAnimationFrame(animate);
+  const now = performance.now();
+  const dt = Math.min(0.05, (now-lastT)/1000);
+  lastT = now;
+
+  // Emergency Lights Pulsing Animation
+  emergencyLights.forEach((el, idx)=>{
+    el.light.intensity = el.baseIntensity + Math.sin(now*0.005 + idx)*0.25;
+  });
+
+  if(gameActive){
+    updatePlayer(dt);
+    updateKeys();
+    updateExitHint();
+    updateCrashboo(dt);
+    checkWin();
+  }
+  renderer.render(scene, camera);
+}
+animate();
+
+/* Button Handlers */
+document.getElementById('startBtn').addEventListener('click', ()=>{
+  initAudio();
+  if(actx && actx.state==='suspended') actx.resume();
+  document.getElementById('startScreen').classList.add('hidden');
+  resetGame();
+});
+document.getElementById('retryBtn').addEventListener('click', resetGame);
+document.getElementById('againBtn').addEventListener('click', resetGame);
+</script>
+</body>
+</html>
