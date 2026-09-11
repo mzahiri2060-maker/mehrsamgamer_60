@@ -1,0 +1,7 @@
+services:
+  - type: web
+    name: my-game-server
+    runtime: node
+    buildCommand: npm install
+    startCommand: npm start
+    autoDeploy: true
