@@ -1,0 +1,1419 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>نبرد گل‌ها</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@500;700;800;900&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --sky-top:#FFE29A;
+    --sky-bot:#7FE3C6;
+    --card:#FFFDF7;
+    --ink:#2C2140;
+    --ink-soft:#6b5f82;
+    --coral:#FF6E5A;
+    --coral-dark:#E85341;
+    --leaf:#3FA672;
+    --leaf-dark:#2E8259;
+    --sun:#FFC24B;
+    --gold:#E8A93B;
+    --danger:#FF5C6C;
+    --shadow: 0 10px 24px rgba(50,30,10,0.18);
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color: transparent;}
+  html,body{margin:0;padding:0;height:100%;overscroll-behavior:none;}
+  body{
+    font-family:'Vazirmatn', sans-serif;
+    background: linear-gradient(180deg, var(--sky-top) 0%, var(--sky-bot) 100%);
+    color:var(--ink);
+    min-height:100%;
+    display:flex;
+    justify-content:center;
+    overflow-x:hidden;
+    user-select:none;
+  }
+  #app{
+    width:100%;
+    max-width:480px;
+    min-height:100vh;
+    position:relative;
+    display:flex;
+    flex-direction:column;
+    padding-bottom:env(safe-area-inset-bottom);
+  }
+  .screen{display:none; flex-direction:column; flex:1; animation: fadeIn .35s ease;}
+  .screen.active{display:flex;}
+  @keyframes fadeIn{from{opacity:0; transform:translateY(8px);} to{opacity:1; transform:translateY(0);}}
+
+  /* ---------- Header ---------- */
+  .topbar{
+    padding:16px 18px 8px;
+    text-align:center;
+    flex-shrink:0;
+    position:relative;
+  }
+  .topbar h1{
+    margin:0;
+    font-size:22px;
+    font-weight:900;
+    color:var(--ink);
+    text-shadow: 0 2px 0 rgba(255,255,255,0.6);
+    letter-spacing:0.5px;
+  }
+  .topbar p{
+    margin:4px 0 0;
+    font-size:13px;
+    color:var(--ink-soft);
+    font-weight:700;
+  }
+  .iconBtn{
+    position:absolute; top:14px;
+    width:36px; height:36px; border-radius:50%;
+    background:rgba(255,255,255,0.7); border:none;
+    display:flex; align-items:center; justify-content:center;
+    font-size:17px; box-shadow:var(--shadow); cursor:pointer;
+  }
+  .iconBtn.left{left:14px;}
+  .iconBtn.right{right:14px;}
+
+  .hud{
+    display:flex; align-items:center; justify-content:center; gap:6px;
+    background:rgba(255,255,255,0.65); border-radius:14px;
+    padding:6px 14px; margin:0 auto; width:fit-content; font-weight:900; font-size:14px;
+  }
+
+  /* ---------- Login screen ---------- */
+  #loginScreen{align-items:center; justify-content:center; padding:24px; text-align:center;}
+  .loginCard{
+    background:var(--card); border-radius:22px; padding:26px 22px;
+    box-shadow:var(--shadow); width:100%; max-width:320px;
+  }
+  .loginCard .emoji{font-size:46px; margin-bottom:4px; animation: idleBob 2.4s ease-in-out infinite;}
+  .loginCard h2{margin:0 0 4px; font-size:20px; font-weight:900;}
+  .loginCard p.sub{margin:0 0 18px; color:var(--ink-soft); font-size:12.5px; font-weight:700;}
+  .field{text-align:right; margin-bottom:12px;}
+  .field label{display:block; font-size:12px; font-weight:800; margin-bottom:4px; color:var(--ink-soft);}
+  .field input{
+    width:100%; padding:12px 14px; border-radius:12px; border:2px solid #eadfc9;
+    background:#fffaf0; font-family:inherit; font-size:15px; font-weight:700; color:var(--ink);
+    outline:none;
+  }
+  .field input:focus{border-color:var(--leaf);}
+  .loginErr{color:var(--danger); font-size:12.5px; font-weight:800; min-height:16px; margin-bottom:6px;}
+  .loginNote{font-size:10.5px; color:var(--ink-soft); font-weight:600; margin-top:10px; line-height:1.5;}
+
+  /* ---------- Buttons (shared) ---------- */
+  .bigBtn{
+    background:linear-gradient(180deg, #4FC58A, var(--leaf-dark));
+    color:#fff; border:none; border-radius:18px;
+    padding:15px; font-size:16px; font-weight:900;
+    font-family:inherit; width:100%;
+    box-shadow:0 8px 0 #1f6b45, 0 14px 20px rgba(0,0,0,0.2);
+    transition: all .1s ease;
+    cursor:pointer;
+  }
+  .bigBtn:disabled{background:#bcbcbc; box-shadow:0 8px 0 #8c8c8c; color:#f1f1f1;}
+  .bigBtn:not(:disabled):active{transform:translateY(6px); box-shadow:0 2px 0 #1f6b45;}
+  .fixedBtn{position:fixed; bottom:16px; left:50%; transform:translateX(-50%); width:calc(100% - 36px); max-width:444px; z-index:20;}
+  .fixedBtn:active{transform:translateX(-50%) translateY(6px) !important;}
+
+  .ghostBtn{
+    background:rgba(255,255,255,0.7); color:var(--ink); border:none; border-radius:14px;
+    padding:12px; font-family:inherit; font-weight:800; font-size:13.5px; width:100%;
+    box-shadow:var(--shadow); cursor:pointer;
+  }
+  .ghostBtn:active{transform:scale(0.97);}
+
+  /* ---------- Home screen ---------- */
+  #homeScreen{padding:6px 18px 20px; justify-content:flex-start; flex:1;}
+  .homeHero{
+    background:var(--card); border-radius:22px; padding:18px; box-shadow:var(--shadow);
+    text-align:center; margin:8px 0 16px;
+  }
+  .homeHero .avatarsPreview{display:flex; justify-content:center; gap:-6px; margin-bottom:8px;}
+  .homeHero .avatarsPreview svg{width:52px; height:52px; margin:0 -6px; animation: idleBob 2.6s ease-in-out infinite;}
+  .homeHero h2{margin:2px 0 2px; font-size:18px; font-weight:900;}
+  .homeHero .statsLine{font-size:12px; color:var(--ink-soft); font-weight:700;}
+  .menuStack{display:flex; flex-direction:column; gap:12px; margin-top:6px;}
+
+  /* ---------- Selection screen ---------- */
+  #squadInfo{
+    margin:0 18px 10px;
+    background:rgba(255,255,255,0.55);
+    border-radius:16px;
+    padding:10px 14px;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    font-weight:800;
+    font-size:14px;
+    flex-shrink:0;
+  }
+  #squadSlots{display:flex; gap:6px;}
+  .slot{
+    width:26px;height:26px;border-radius:50%;
+    background:#fff;
+    border:2px dashed #cbb;
+    display:flex;align-items:center;justify-content:center;
+    overflow:hidden;
+  }
+  .slot.filled{border:2px solid var(--leaf); background:#fff;}
+  .slot svg{width:100%;height:100%;}
+
+  #plantGrid, #shopGrid{
+    flex:1;
+    overflow-y:auto;
+    padding:6px 14px 100px;
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:12px;
+    -webkit-overflow-scrolling:touch;
+  }
+  .plantCard{
+    background:var(--card);
+    border-radius:20px;
+    padding:12px 10px 10px;
+    box-shadow:var(--shadow);
+    text-align:center;
+    position:relative;
+    border:3px solid transparent;
+    transition: transform .15s ease, border-color .15s ease, box-shadow .15s ease;
+    cursor:pointer;
+  }
+  .plantCard:active{transform:scale(0.95);}
+  .plantCard.selected{
+    border-color:var(--leaf);
+    box-shadow:0 10px 24px rgba(46,130,89,0.35);
+  }
+  .plantCard .avatarWrap{
+    width:82px;height:82px;margin:0 auto 6px;
+    display:flex;align-items:center;justify-content:center;
+    position:relative;
+  }
+  .plantCard svg{width:100%;height:100%; animation: idleBob 2.6s ease-in-out infinite;}
+  .plantCard .pname{font-size:13px; font-weight:800; margin:2px 0 4px;}
+  .lvBadge{
+    position:absolute; bottom:-2px; right:-2px; background:var(--gold); color:#fff;
+    font-size:10px; font-weight:900; padding:2px 6px; border-radius:8px; box-shadow:0 2px 4px rgba(0,0,0,0.2);
+  }
+  .statRow{display:flex; justify-content:center; gap:8px; font-size:10px; font-weight:800; color:var(--ink-soft);}
+  .statRow span{display:flex; align-items:center; gap:2px;}
+  .checkBadge{
+    position:absolute; top:8px; left:8px;
+    width:22px;height:22px;border-radius:50%;
+    background:var(--leaf); color:#fff;
+    display:flex;align-items:center;justify-content:center;
+    font-size:13px; font-weight:900;
+    opacity:0; transform:scale(0.5);
+    transition: all .15s ease;
+  }
+  .plantCard.selected .checkBadge{opacity:1; transform:scale(1);}
+
+  /* shop card variants */
+  .plantCard.lockedCard .avatarWrap svg{filter:grayscale(1) brightness(0.6);}
+  .lockOverlay{
+    position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
+    font-size:26px;
+  }
+  .shopBtnSm{
+    margin-top:6px; width:100%; border:none; border-radius:10px; padding:8px 4px;
+    font-family:inherit; font-weight:900; font-size:12px; color:#fff;
+    background:linear-gradient(180deg,#FFCE63,var(--gold)); box-shadow:0 4px 0 #b9822a;
+    cursor:pointer;
+  }
+  .shopBtnSm:disabled{background:#cfcfcf; box-shadow:0 4px 0 #a2a2a2; color:#eee;}
+  .shopBtnSm:not(:disabled):active{transform:translateY(3px); box-shadow:0 1px 0 #b9822a;}
+  .shopBtnSm.unlockBtn{background:linear-gradient(180deg,#8E6FE0,#6A4CC0); box-shadow:0 4px 0 #4a339c;}
+  .shopBtnSm.unlockBtn:not(:disabled):active{box-shadow:0 1px 0 #4a339c;}
+
+  @keyframes idleBob{
+    0%,100%{transform:translateY(0) rotate(0deg);}
+    50%{transform:translateY(-4px) rotate(-2deg);}
+  }
+
+  /* ---------- Battle screen ---------- */
+  #battleScreen{padding:6px 14px 16px; flex:1;}
+  .row{display:flex; justify-content:space-around; align-items:flex-end; gap:6px; padding:6px 0;}
+  .enemyRow{padding-top:2px;}
+  .fighter{
+    width:30%;
+    display:flex; flex-direction:column; align-items:center;
+    position:relative;
+    transition: transform .25s ease, opacity .3s ease;
+  }
+  .fighter.dead{opacity:0.25; filter:grayscale(1); pointer-events:none;}
+  .fighter .avatarBox{
+    width:66px;height:66px;
+    position:relative;
+    display:flex;align-items:center;justify-content:center;
+  }
+  .fighter svg{width:100%;height:100%; animation: idleBob 2.4s ease-in-out infinite;}
+  .fighter.targetable svg{filter: drop-shadow(0 0 6px rgba(255,110,90,0.9));}
+  .fighter .nameTag{font-size:9.5px; font-weight:800; margin-top:2px; max-width:78px; text-align:center; line-height:1.1;}
+  .hpWrap{
+    width:74px; height:9px; border-radius:6px; background:rgba(0,0,0,0.15);
+    margin-top:3px; overflow:hidden; box-shadow: inset 0 1px 2px rgba(0,0,0,0.2);
+  }
+  .hpFill{height:100%; background:linear-gradient(180deg,#7BE0A0,#38B06A); border-radius:6px; transition: width .5s cubic-bezier(.2,.8,.3,1); width:100%;}
+  .hpFill.low{background:linear-gradient(180deg,#FF9B8F,var(--danger));}
+  .fighter.attacking svg{animation: lungeSelf .5s ease;}
+  .fighter.attackingEnemy svg{animation: lungeEnemy .5s ease;}
+  .fighter.hit svg{animation: hitShake .4s ease;}
+  .fighter.hit .avatarBox{animation: flashRed .4s ease;}
+  @keyframes lungeSelf{
+    0%{transform:translateY(0);}
+    35%{transform:translateY(-16px) scale(1.08);}
+    55%{transform:translateY(4px) scale(0.96);}
+    100%{transform:translateY(0);}
+  }
+  @keyframes lungeEnemy{
+    0%{transform:translateY(0);}
+    35%{transform:translateY(16px) scale(1.08);}
+    55%{transform:translateY(-4px) scale(0.96);}
+    100%{transform:translateY(0);}
+  }
+  @keyframes hitShake{
+    0%,100%{transform:translateX(0);}
+    20%{transform:translateX(-8px) rotate(-4deg);}
+    40%{transform:translateX(8px) rotate(4deg);}
+    60%{transform:translateX(-6px) rotate(-3deg);}
+    80%{transform:translateX(6px) rotate(3deg);}
+  }
+  @keyframes flashRed{
+    0%,100%{filter:none;}
+    40%{filter: brightness(1.6) saturate(3) hue-rotate(-10deg);}
+  }
+
+  .dmgPop{
+    position:absolute; top:-6px; left:50%; transform:translateX(-50%);
+    font-weight:900; font-size:17px; color:var(--danger);
+    text-shadow: 0 2px 0 #fff, 0 0 6px rgba(255,255,255,0.8);
+    pointer-events:none;
+    animation: popUp .9s ease forwards;
+    z-index:30;
+  }
+  .dmgPop.heal{color:var(--leaf-dark);}
+  @keyframes popUp{
+    0%{opacity:0; transform:translate(-50%,0) scale(0.6);}
+    20%{opacity:1; transform:translate(-50%,-14px) scale(1.15);}
+    100%{opacity:0; transform:translate(-50%,-46px) scale(1);}
+  }
+
+  .speechBubble{
+    position:absolute; bottom:100%; left:50%; transform:translateX(-50%);
+    background:#fff; color:var(--ink); font-size:10.5px; font-weight:800;
+    padding:5px 9px; border-radius:10px; white-space:nowrap; max-width:none;
+    box-shadow:0 3px 8px rgba(0,0,0,0.2);
+    pointer-events:none; z-index:31;
+    animation: bubblePop 1.7s ease forwards;
+  }
+  .speechBubble::after{
+    content:''; position:absolute; top:100%; left:50%; transform:translateX(-50%);
+    border:5px solid transparent; border-top-color:#fff;
+  }
+  @keyframes bubblePop{
+    0%{opacity:0; transform:translateX(-50%) translateY(6px) scale(0.7);}
+    12%{opacity:1; transform:translateX(-50%) translateY(-2px) scale(1);}
+    82%{opacity:1;}
+    100%{opacity:0; transform:translateX(-50%) translateY(-10px) scale(0.9);}
+  }
+
+  .vsDivider{
+    text-align:center; font-weight:900; font-size:12px; color:var(--ink-soft);
+    margin:2px 0; letter-spacing:2px;
+  }
+
+  #logBox{
+    background:rgba(255,255,255,0.6);
+    border-radius:14px;
+    padding:9px 14px;
+    margin:8px 0;
+    font-size:12.5px; font-weight:800; text-align:center;
+    min-height:18px;
+    flex-shrink:0;
+  }
+
+  #actionPanel{
+    display:flex; flex-direction:column; gap:8px; margin-top:auto; padding-top:6px;
+  }
+  .allyPicker{display:flex; justify-content:center; gap:10px;}
+  .allyChip{
+    width:46px;height:46px; border-radius:50%; background:#fff; box-shadow:var(--shadow);
+    border:3px solid transparent; display:flex; align-items:center; justify-content:center;
+    transition: transform .12s ease, border-color .12s ease; position:relative;
+  }
+  .allyChip svg{width:80%;height:80%;}
+  .allyChip.selected{border-color:var(--sun); transform:scale(1.12);}
+  .allyChip.usedSpecial::after{
+    content:'★'; position:absolute; top:-4px; right:-4px; font-size:11px; color:#bbb;
+  }
+  .allyChip.deadChip{opacity:0.25; filter:grayscale(1); pointer-events:none;}
+
+  .actionBtns{display:flex; gap:8px;}
+  .actBtn{
+    flex:1; border:none; border-radius:14px; padding:11px 6px;
+    font-family:inherit; font-weight:900; font-size:12.5px; color:#fff;
+    background: linear-gradient(180deg, var(--coral), var(--coral-dark));
+    box-shadow: 0 6px 0 #b33d2f;
+    transition: all .1s ease;
+  }
+  .actBtn.special{background:linear-gradient(180deg,#8E6FE0,#6A4CC0); box-shadow:0 6px 0 #4a339c;}
+  .actBtn:disabled{background:#cfcfcf; box-shadow:0 6px 0 #a2a2a2; color:#eee;}
+  .actBtn:not(:disabled):active{transform:translateY(4px); box-shadow:0 2px 0 #b33d2f;}
+  .actBtn.special:not(:disabled):active{box-shadow:0 2px 0 #4a339c;}
+  .hint{text-align:center; font-size:11.5px; color:var(--ink-soft); font-weight:700; min-height:16px;}
+
+  /* ---------- Result screen ---------- */
+  #resultScreen{align-items:center; justify-content:center; text-align:center; padding:20px; position:relative; overflow:hidden;}
+  #resultScreen h2{font-size:28px; font-weight:900; margin:0 0 6px;}
+  #resultScreen p{color:var(--ink-soft); font-weight:700; margin:0 0 6px;}
+  #resultQuote{font-style:normal; font-size:13px; color:var(--ink); background:rgba(255,255,255,0.6); padding:8px 14px; border-radius:12px; margin-bottom:20px; font-weight:800;}
+  .resultIcon{font-size:60px; margin-bottom:6px; animation: idleBob 1.6s ease-in-out infinite;}
+  .rewardLine{font-size:14px; font-weight:900; color:var(--gold); margin-bottom:18px;}
+  .confetti{
+    position:absolute; top:-10px; width:8px; height:14px; border-radius:2px;
+    animation: fall linear forwards;
+  }
+  @keyframes fall{ to{ transform: translateY(120vh) rotate(360deg); opacity:0.9;} }
+
+  .resultBtnRow{display:flex; gap:10px; width:100%; max-width:320px;}
+</style>
+</head>
+<body>
+<div id="app">
+
+  <!-- ================= LOGIN SCREEN ================= -->
+  <div class="screen active" id="loginScreen">
+    <div class="loginCard">
+      <div class="emoji">🌼</div>
+      <h2>نبرد گل‌ها</h2>
+      <p class="sub">وارد حسابت شو یا یه حساب جدید بساز</p>
+      <div class="field">
+        <label>اسم کاربری</label>
+        <input type="text" id="usernameInput" placeholder="مثلاً: باغبون_قهرمان" maxlength="18">
+      </div>
+      <div class="field">
+        <label>رمز عبور</label>
+        <input type="password" id="passwordInput" placeholder="حداقل ۴ کاراکتر" maxlength="24">
+      </div>
+      <div class="loginErr" id="loginErr"></div>
+      <button class="bigBtn" id="loginBtn">ورود به حساب</button>
+      <div class="loginNote">اگه اسم کاربری جدید باشه، خودکار یه حساب جدید برات ساخته می‌شه. این فقط برای همین بازیه، رمز مهم واقعیت رو اینجا استفاده نکن 🙂</div>
+    </div>
+  </div>
+
+  <!-- ================= HOME SCREEN ================= -->
+  <div class="screen" id="homeScreen">
+    <div class="topbar">
+      <button class="iconBtn right" id="muteBtnHome">🔊</button>
+      <button class="iconBtn left" id="logoutBtn">🚪</button>
+      <h1>🌼 نبرد گل‌ها 🌼</h1>
+    </div>
+    <div class="homeHero">
+      <div class="avatarsPreview" id="homePreview"></div>
+      <h2 id="homeWelcome">خوش اومدی!</h2>
+      <div class="statsLine" id="homeStats"></div>
+    </div>
+    <div class="hud">🪙 <span id="homeCoins">0</span> سکه</div>
+    <div class="menuStack">
+      <button class="bigBtn" id="goBattleBtn">شروع نبرد ⚔️</button>
+      <button class="bigBtn" id="goOnlineBtn">نبرد آنلاین 🌐</button>
+      <button class="ghostBtn" id="goShopBtn">فروشگاه و ارتقا 🛒</button>
+    </div>
+  </div>
+
+  <!-- ================= SELECT SCREEN ================= -->
+  <div class="screen" id="selectScreen">
+    <div class="topbar">
+      <button class="iconBtn right" id="backFromSelect">🏠</button>
+      <h1>انتخاب تیم</h1>
+      <p id="selectSubtitle">سه تا از گیاهانت رو انتخاب کن</p>
+      <div id="onlineStatus" style="display:none;background:rgba(255,255,255,.72);padding:7px 12px;border-radius:12px;font-size:11px;font-weight:900;margin-top:6px;">🌐 در حال اتصال...</div>
+    </div>
+    <div id="squadInfo">
+      <span>تیم من</span>
+      <div id="squadSlots"></div>
+    </div>
+    <div id="plantGrid"></div>
+    <button class="bigBtn fixedBtn" id="startBattleBtn" disabled>برو به نبرد ⚔️</button>
+  </div>
+
+  <!-- ================= SHOP SCREEN ================= -->
+  <div class="screen" id="shopScreen">
+    <div class="topbar">
+      <button class="iconBtn right" id="backFromShop">🏠</button>
+      <h1>فروشگاه 🛒</h1>
+      <p>با سکه، گل جدید باز کن یا گل‌هات رو ارتقا بده</p>
+    </div>
+    <div class="hud">🪙 <span id="shopCoins">0</span> سکه</div>
+    <div id="shopGrid"></div>
+  </div>
+
+  <!-- ================= BATTLE SCREEN ================= -->
+  <div class="screen" id="battleScreen">
+    <div class="topbar" style="padding-top:10px;">
+      <button class="iconBtn right" id="muteBtnBattle">🔊</button>
+      <h1 style="font-size:18px;">نبرد گل‌ها</h1>
+    </div>
+    <div class="row enemyRow" id="enemyRow"></div>
+    <div class="vsDivider">⚔️ در برابر ⚔️</div>
+    <div class="row playerRow" id="playerRow"></div>
+    <div id="logBox">نبرد شروع شد!</div>
+    <div id="actionPanel">
+      <div class="allyPicker" id="allyPicker"></div>
+      <div class="actionBtns">
+        <button class="actBtn" id="attackBtn" disabled>حمله عادی</button>
+        <button class="actBtn special" id="specialBtn" disabled>توانایی ویژه ✨</button>
+      </div>
+      <div class="hint" id="hintText">اول یکی از گل‌هات رو انتخاب کن</div>
+    </div>
+  </div>
+
+  <!-- ================= RESULT SCREEN ================= -->
+  <div class="screen" id="resultScreen">
+    <div class="resultIcon" id="resultIcon">🏆</div>
+    <h2 id="resultTitle">پیروزی!</h2>
+    <p id="resultSub">تیم گل‌های تو برنده شد</p>
+    <div id="resultQuote"></div>
+    <div class="rewardLine" id="rewardLine"></div>
+    <div class="resultBtnRow">
+      <button class="bigBtn" id="playAgainBtn">نبرد دوباره</button>
+      <button class="ghostBtn" id="resultHomeBtn">خانه 🏠</button>
+    </div>
+  </div>
+
+</div>
+
+<script>
+/* ============================================================
+   SOUND — tiny synthesized SFX (no external files needed)
+   ============================================================ */
+let audioCtx = null;
+let muted = false;
+function ensureAudio(){
+  if(!audioCtx){
+    try{ audioCtx = new (window.AudioContext||window.webkitAudioContext)(); }catch(e){ return null; }
+  }
+  if(audioCtx.state==='suspended'){ audioCtx.resume().catch(()=>{}); }
+  return audioCtx;
+}
+function beep(freq, duration, type='sine', vol=0.2, delay=0){
+  if(muted) return;
+  const ctx = ensureAudio();
+  if(!ctx) return;
+  try{
+    const t0 = ctx.currentTime+delay;
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = type;
+    osc.frequency.setValueAtTime(freq, t0);
+    gain.gain.setValueAtTime(vol, t0);
+    gain.gain.exponentialRampToValueAtTime(0.001, t0+duration);
+    osc.connect(gain).connect(ctx.destination);
+    osc.start(t0); osc.stop(t0+duration+0.03);
+  }catch(e){}
+}
+function sfxClick(){ beep(650,0.05,'square',0.07); }
+function sfxHit(){ beep(170,0.17,'square',0.17); beep(90,0.14,'square',0.11,0.03); }
+function sfxHeal(){ beep(520,0.12,'sine',0.14); beep(700,0.14,'sine',0.14,0.1); beep(900,0.16,'sine',0.14,0.2); }
+function sfxShield(){ beep(220,0.25,'triangle',0.16); }
+function sfxUnlock(){ [500,700,900,1200].forEach((f,i)=>beep(f,0.12,'sine',0.14,i*0.08)); }
+function sfxLevelUp(){ [440,554,659,880].forEach((f,i)=>beep(f,0.14,'triangle',0.15,i*0.07)); }
+function sfxVictory(){ [523,659,784,1046].forEach((f,i)=>beep(f,0.22,'triangle',0.18,i*0.15)); }
+function sfxDefeat(){ [400,340,260].forEach((f,i)=>beep(f,0.3,'sawtooth',0.14,i*0.2)); }
+function toggleMute(){
+  muted = !muted;
+  document.querySelectorAll('.iconBtn[id^="muteBtn"]').forEach(b=>b.textContent = muted?'🔇':'🔊');
+  if(!muted) ensureAudio();
+}
+document.getElementById('muteBtnHome').addEventListener('click', toggleMute);
+document.getElementById('muteBtnBattle').addEventListener('click', toggleMute);
+
+/* ============================================================
+   CHARACTER ART — original SVG "cute plant" avatars
+   ============================================================ */
+function svgWrap(inner){ return `<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">${inner}</svg>`; }
+
+const ART = {
+  emberRose: svgWrap(`
+    <g>
+      <path d="M50 20 C30 20 18 35 18 50 C18 68 33 82 50 82 C67 82 82 68 82 50 C82 35 70 20 50 20 Z" fill="#E8483F"/>
+      <path d="M50 28 C38 28 30 38 30 50 C30 62 39 72 50 72 C61 72 70 62 70 50 C70 38 62 28 50 28 Z" fill="#FF6E5A"/>
+      <path d="M50 40a8 8 0 100 16 8 8 0 000-16z" fill="#C43229"/>
+      <ellipse cx="41" cy="49" rx="4.2" ry="5.4" fill="#2C2140"/>
+      <ellipse cx="59" cy="49" rx="4.2" ry="5.4" fill="#2C2140"/>
+      <path d="M40 62 Q50 56 60 62" stroke="#2C2140" stroke-width="2.6" fill="none" stroke-linecap="round"/>
+      <path d="M28 78 Q35 90 50 92 Q65 90 72 78" fill="#3FA672"/>
+    </g>`),
+  sunnyBloom: svgWrap(`
+    <g>
+      <g fill="#FFC24B">
+        <circle cx="50" cy="16" r="11"/><circle cx="50" cy="84" r="11"/>
+        <circle cx="16" cy="50" r="11"/><circle cx="84" cy="50" r="11"/>
+        <circle cx="25" cy="25" r="10"/><circle cx="75" cy="25" r="10"/>
+        <circle cx="25" cy="75" r="10"/><circle cx="75" cy="75" r="10"/>
+      </g>
+      <circle cx="50" cy="50" r="24" fill="#8A5A2B"/>
+      <ellipse cx="42" cy="48" rx="3.6" ry="5" fill="#fff"/>
+      <ellipse cx="58" cy="48" rx="3.6" ry="5" fill="#fff"/>
+      <circle cx="42" cy="49" r="2" fill="#2C2140"/><circle cx="58" cy="49" r="2" fill="#2C2140"/>
+      <path d="M42 60 Q50 66 58 60" stroke="#fff" stroke-width="2.6" fill="none" stroke-linecap="round"/>
+    </g>`),
+  spikeCactus: svgWrap(`
+    <g>
+      <path d="M50 22a18 18 0 0118 18v22a18 18 0 01-36 0V40a18 18 0 0118-18z" fill="#4EA36B"/>
+      <path d="M28 46c-9 0-14 8-14 16s5 12 10 12" stroke="#4EA36B" stroke-width="10" fill="none" stroke-linecap="round"/>
+      <path d="M72 46c9 0 14 8 14 16s-5 12-10 12" stroke="#4EA36B" stroke-width="10" fill="none" stroke-linecap="round"/>
+      <g fill="#2C2140" opacity="0.85">
+        <rect x="34" y="30" width="2" height="6" rx="1"/><rect x="44" y="26" width="2" height="6" rx="1"/>
+        <rect x="56" y="26" width="2" height="6" rx="1"/><rect x="66" y="30" width="2" height="6" rx="1"/>
+      </g>
+      <rect x="30" y="52" width="16" height="8" rx="4" fill="#20303A"/>
+      <rect x="54" y="52" width="16" height="8" rx="4" fill="#20303A"/>
+      <path d="M40 74 Q50 70 60 74" stroke="#20303A" stroke-width="2.6" fill="none" stroke-linecap="round"/>
+    </g>`),
+  thunderLily: svgWrap(`
+    <g>
+      <path d="M50 14 C36 24 30 38 30 50 C30 66 39 80 50 80 C61 80 70 66 70 50 C70 38 64 24 50 14Z" fill="#9C6AE0"/>
+      <path d="M50 24 C40 32 36 42 36 50 C36 62 42 72 50 72 C58 72 64 62 64 50 C64 42 60 32 50 24Z" fill="#B98AF0"/>
+      <ellipse cx="42" cy="50" rx="3.8" ry="5" fill="#2C2140"/>
+      <ellipse cx="58" cy="50" rx="3.8" ry="5" fill="#2C2140"/>
+      <path d="M40 60 Q50 54 60 60" stroke="#2C2140" stroke-width="2.4" fill="none" stroke-linecap="round"/>
+      <path d="M53 8 L45 26 L53 26 L44 40 L58 22 L50 22 Z" fill="#FFD23F"/>
+    </g>`),
+  pinkShroom: svgWrap(`
+    <g>
+      <path d="M14 52 C14 30 30 18 50 18 C70 18 86 30 86 52 Z" fill="#F0708C"/>
+      <circle cx="32" cy="34" r="5.5" fill="#FFE1E9"/>
+      <circle cx="64" cy="30" r="4" fill="#FFE1E9"/>
+      <circle cx="50" cy="44" r="6" fill="#FFE1E9"/>
+      <rect x="34" y="52" width="32" height="30" rx="14" fill="#FFEADB"/>
+      <ellipse cx="43" cy="63" rx="3.4" ry="4.6" fill="#2C2140"/>
+      <ellipse cx="57" cy="63" rx="3.4" ry="4.6" fill="#2C2140"/>
+      <path d="M44 72 Q50 76 56 72" stroke="#2C2140" stroke-width="2.2" fill="none" stroke-linecap="round"/>
+    </g>`),
+  pineWarrior: svgWrap(`
+    <g>
+      <path d="M50 8 L58 24 L50 20 L46 30 L38 20 L34 8 L42 18 Z" fill="#3FA672"/>
+      <path d="M35 32 a15 15 0 0130 0 v28 a15 15 0 01-30 0 z" fill="#F3B633"/>
+      <g stroke="#C98A1B" stroke-width="1.6" opacity="0.7">
+        <path d="M35 38 L65 32"/><path d="M35 48 L65 42"/><path d="M35 58 L65 52"/>
+      </g>
+      <ellipse cx="43" cy="50" rx="3.4" ry="4.6" fill="#2C2140"/>
+      <ellipse cx="57" cy="50" rx="3.4" ry="4.6" fill="#2C2140"/>
+      <path d="M42 60 Q50 54 58 60" stroke="#2C2140" stroke-width="2.2" fill="none" stroke-linecap="round"/>
+    </g>`),
+  frostDaisy: svgWrap(`
+    <g fill="#EAF6FB">
+      <ellipse cx="50" cy="16" rx="9" ry="15"/><ellipse cx="50" cy="84" rx="9" ry="15"/>
+      <ellipse cx="16" cy="50" rx="15" ry="9"/><ellipse cx="84" cy="50" rx="15" ry="9"/>
+      <ellipse cx="27" cy="27" rx="9" ry="14" transform="rotate(-45 27 27)"/>
+      <ellipse cx="73" cy="27" rx="9" ry="14" transform="rotate(45 73 27)"/>
+      <ellipse cx="27" cy="73" rx="9" ry="14" transform="rotate(45 27 73)"/>
+      <ellipse cx="73" cy="73" rx="9" ry="14" transform="rotate(-45 73 73)"/>
+      <circle cx="50" cy="50" r="18" fill="#BFE7F2"/>
+      <rect x="30" y="44" width="12" height="7" rx="3.5" fill="#1E4E5C"/>
+      <rect x="58" y="44" width="12" height="7" rx="3.5" fill="#1E4E5C"/>
+      <path d="M42 60 Q50 64 58 60" stroke="#1E4E5C" stroke-width="2.4" fill="none" stroke-linecap="round"/>
+    </g>`),
+  vineShadow: svgWrap(`
+    <g>
+      <path d="M50 18 C30 26 20 42 24 58 C28 74 40 84 50 84 C60 84 72 74 76 58 C80 42 70 26 50 18 Z" fill="#4B2E6E"/>
+      <path d="M50 30 C38 36 32 46 34 58 C36 70 43 76 50 76 C57 76 64 70 66 58 C68 46 62 36 50 30 Z" fill="#6E4A98"/>
+      <path d="M35 46 Q50 34 65 46" stroke="#2C2140" stroke-width="3" fill="none" stroke-linecap="round"/>
+      <ellipse cx="42" cy="56" rx="3.6" ry="4.8" fill="#FFD23F"/>
+      <ellipse cx="58" cy="56" rx="3.6" ry="4.8" fill="#FFD23F"/>
+      <path d="M42 68 Q50 62 58 68" stroke="#2C2140" stroke-width="2.4" fill="none" stroke-linecap="round"/>
+    </g>`)
+};
+
+/* ============================================================
+   ROSTER + PROGRESSION DATA
+   ============================================================ */
+const ROSTER = [
+  {id:'emberRose',  name:'رز آتشین',      hp:100, atk:20, spd:7,  ability:'power', abilityName:'ضربه آتشین',
+    lines:{attack:['بسوز تو شعله من!','از این طرف فرار نداری!'], special:['وقت آتیش‌بازیه! 🔥'], lowhp:['یکم... داغه اینجا...']}},
+  {id:'sunnyBloom', name:'آفتابگردان',    hp:112, atk:14, spd:6,  ability:'heal',  abilityName:'نور شفابخش',
+    lines:{attack:['بگیر این تلألو رو!','نور خورشید طرف توئه!'], special:['بذار نورم بهت برسه ☀️'], lowhp:['کم‌کم دارم پژمرده می‌شم...']}},
+  {id:'spikeCactus',name:'کاکتوس سرکش',   hp:132, atk:13, spd:4,  ability:'shield',abilityName:'زره خاردار',
+    lines:{attack:['به خارام دست نزن!','این یکی درد داشت، نه؟'], special:['زره من رو بشکن اگه می‌تونی 🌵'], lowhp:['حتی من هم... ترک می‌خورم...']}},
+  {id:'thunderLily',name:'نیلوفر رعد',    hp:88,  atk:18, spd:10, ability:'double',abilityName:'ضربه دوقلو',
+    lines:{attack:['سریع‌تر از برقم!','جا خالی بده!'], special:['دو ضربه، یه ثانیه ⚡'], lowhp:['برق من داره... کم میاره...']}},
+  {id:'pinkShroom', name:'قارچ صورتی',    hp:92,  atk:12, spd:6,  ability:'heal',  abilityName:'هاگ شفابخش',
+    lines:{attack:['هاگ‌هام حواسشونه!','اینم یه هدیه‌ی کوچولو'], special:['بذار کمکتون کنم دوستان 🍄'], lowhp:['وای... سرم گیج می‌ره...']}},
+  {id:'pineWarrior',name:'آناناس جنگجو',  hp:105, atk:19, spd:6,  ability:'power', abilityName:'خار ویرانگر',
+    lines:{attack:['طعم پیروزی رو بچش!','یه جنگجوی واقعی عقب نمی‌کشه'], special:['خارهام آماده‌ست! 🍍'], lowhp:['پوستم داره... ترک برمی‌داره...']}},
+  {id:'frostDaisy', name:'گل یخی',        hp:98,  atk:14, spd:8,  ability:'shield',abilityName:'سپر یخی',
+    lines:{attack:['یخ‌زده باش!','سرده اینجا، نه؟'], special:['سپر یخی، فعال! ❄️'], lowhp:['دارم... آب می‌شم...']}},
+  {id:'vineShadow', name:'پیچک سایه',     hp:90,  atk:17, spd:9,  ability:'double',abilityName:'گزش دوگانه',
+    lines:{attack:['از سایه‌ها می‌زنم!','منو ندیدی، نه؟'], special:['دو گزش تو تاریکی 🌙'], lowhp:['نور... داره پیدام می‌کنه...']}}
+];
+const STARTER_UNLOCKED = ['emberRose','sunnyBloom','spikeCactus','thunderLily'];
+const LOCK_COST = {pinkShroom:50, pineWarrior:70, frostDaisy:90, vineShadow:110};
+const MAX_LEVEL = 5;
+function upgradeCost(level){ return level*22; }
+function statsForLevel(base, level){
+  return {
+    hp: base.hp + (level-1)*9,
+    atk: base.atk + (level-1)*3
+  };
+}
+
+const VICTORY_LINES = ['ما پیروزیم! 🌸','باغ ما همیشه می‌بره!','نبرد خوبی بود، دوباره بیاید!'];
+const DEFEAT_LINES = ['این‌بار نه... ولی باز می‌کاریم و می‌جنگیم','باشه، دفعه بعد قوی‌تر برمی‌گردیم','هوم، باید بیشتر تمرین کنیم...'];
+
+/* ============================================================
+   STORAGE — account persistence
+   ============================================================ */
+function newAccount(password){
+  const levels = {};
+  ROSTER.forEach(p=>levels[p.id]=1);
+  return {
+    password, coins:40, unlocked:[...STARTER_UNLOCKED],
+    levels, wins:0, losses:0
+  };
+}
+async function getAccount(username){
+  try{
+    const res = await window.storage.get('account:'+username.toLowerCase(), false);
+    return res ? JSON.parse(res.value) : null;
+  }catch(e){ return null; }
+}
+async function saveAccount(username, data){
+  try{
+    const res = await window.storage.set('account:'+username.toLowerCase(), JSON.stringify(data), false);
+    return !!res;
+  }catch(e){ console.error('save failed', e); return false; }
+}
+
+/* ============================================================
+   STATE
+   ============================================================ */
+let currentUser = null;
+let account = null;
+let selectedIds = [];
+let battle = null;
+let onlineMode = false;
+let onlineSocket = null;
+let onlineSide = null;
+let onlineTurn = null;
+let onlineMatchId = null;
+
+const screens = {
+  login: document.getElementById('loginScreen'),
+  home: document.getElementById('homeScreen'),
+  select: document.getElementById('selectScreen'),
+  shop: document.getElementById('shopScreen'),
+  battle: document.getElementById('battleScreen'),
+  result: document.getElementById('resultScreen'),
+};
+function showScreen(key){
+  Object.values(screens).forEach(s=>s.classList.remove('active'));
+  screens[key].classList.add('active');
+}
+
+/* ---------- Login ---------- */
+const usernameInput = document.getElementById('usernameInput');
+const passwordInput = document.getElementById('passwordInput');
+const loginErr = document.getElementById('loginErr');
+const loginBtn = document.getElementById('loginBtn');
+
+loginBtn.addEventListener('click', handleLogin);
+passwordInput.addEventListener('keydown', e=>{ if(e.key==='Enter') handleLogin(); });
+
+async function handleLogin(){
+  sfxClick();
+  const uname = usernameInput.value.trim();
+  const pass = passwordInput.value;
+  loginErr.textContent = '';
+  if(uname.length<2){ loginErr.textContent='اسم کاربری باید حداقل ۲ حرف باشه'; return; }
+  if(pass.length<4){ loginErr.textContent='رمز باید حداقل ۴ کاراکتر باشه'; return; }
+
+  loginBtn.disabled = true;
+  loginBtn.textContent = 'در حال بررسی...';
+
+  const existing = await getAccount(uname);
+  if(existing){
+    if(existing.password !== pass){
+      loginErr.textContent = 'رمز اشتباهه، دوباره امتحان کن';
+      loginBtn.disabled = false; loginBtn.textContent = 'ورود به حساب';
+      return;
+    }
+    account = existing;
+  } else {
+    account = newAccount(pass);
+    await saveAccount(uname, account);
+  }
+  currentUser = uname;
+  loginBtn.disabled = false; loginBtn.textContent = 'ورود به حساب';
+  enterHome();
+}
+
+document.getElementById('logoutBtn').addEventListener('click', ()=>{
+  sfxClick();
+  currentUser = null; account = null; selectedIds = [];
+  usernameInput.value=''; passwordInput.value=''; loginErr.textContent='';
+  showScreen('login');
+});
+
+/* ---------- Home ---------- */
+function enterHome(){
+  showScreen('home');
+  document.getElementById('homeWelcome').textContent = `سلام ${currentUser}! 👋`;
+  document.getElementById('homeStats').textContent = `${account.wins} برد   •   ${account.losses} باخت`;
+  document.getElementById('homeCoins').textContent = account.coins;
+  const preview = document.getElementById('homePreview');
+  preview.innerHTML = account.unlocked.slice(0,4).map(id=>ART[id]).join('');
+}
+document.getElementById('goBattleBtn').addEventListener('click', ()=>{
+  sfxClick();
+  onlineMode = false;
+  selectedIds = [];
+  document.getElementById('selectSubtitle').textContent='سه تا از گیاهانت رو انتخاب کن';
+  document.getElementById('onlineStatus').style.display='none';
+  document.getElementById('startBattleBtn').textContent='برو به نبرد ⚔️';
+  renderGrid(); renderSquadSlots();
+  showScreen('select');
+});
+document.getElementById('goOnlineBtn').addEventListener('click', ()=>{
+  sfxClick();
+  onlineMode = true;
+  selectedIds = [];
+  document.getElementById('selectSubtitle').textContent='۳ گل انتخاب کن، بعد منتظر حریف بمون 🌐';
+  document.getElementById('onlineStatus').style.display='block';
+  document.getElementById('onlineStatus').textContent='🌐 برای پیدا کردن حریف آماده‌ایم...';
+  document.getElementById('startBattleBtn').textContent='پیدا کردن حریف 🌐';
+  renderGrid(); renderSquadSlots();
+  showScreen('select');
+});
+document.getElementById('goShopBtn').addEventListener('click', ()=>{
+  sfxClick();
+  renderShop();
+  showScreen('shop');
+});
+document.getElementById('backFromSelect').addEventListener('click', ()=>{ sfxClick(); closeOnlineSocket(); onlineMode=false; enterHome(); });
+document.getElementById('backFromShop').addEventListener('click', ()=>{ sfxClick(); enterHome(); });
+document.getElementById('resultHomeBtn').addEventListener('click', ()=>{ sfxClick(); closeOnlineSocket(); onlineMode=false; enterHome(); });
+
+/* ---------- Selection grid (only unlocked plants) ---------- */
+const plantGrid = document.getElementById('plantGrid');
+const squadSlots = document.getElementById('squadSlots');
+const startBattleBtn = document.getElementById('startBattleBtn');
+
+function renderGrid(){
+  plantGrid.innerHTML = '';
+  ROSTER.filter(p=>account.unlocked.includes(p.id)).forEach(p=>{
+    const lv = account.levels[p.id]||1;
+    const eff = statsForLevel(p, lv);
+    const card = document.createElement('div');
+    card.className = 'plantCard' + (selectedIds.includes(p.id) ? ' selected':'');
+    card.innerHTML = `
+      <div class="checkBadge">✓</div>
+      <div class="avatarWrap">${ART[p.id]}<span class="lvBadge">Lv${lv}</span></div>
+      <div class="pname">${p.name}</div>
+      <div class="statRow">
+        <span>❤️ ${eff.hp}</span>
+        <span>⚔️ ${eff.atk}</span>
+        <span>💨 ${p.spd}</span>
+      </div>`;
+    card.addEventListener('click', ()=>toggleSelect(p.id));
+    plantGrid.appendChild(card);
+  });
+}
+function toggleSelect(id){
+  sfxClick();
+  const idx = selectedIds.indexOf(id);
+  if(idx>-1){ selectedIds.splice(idx,1); }
+  else{
+    if(selectedIds.length>=3) return;
+    selectedIds.push(id);
+  }
+  renderGrid();
+  renderSquadSlots();
+}
+function renderSquadSlots(){
+  squadSlots.innerHTML = '';
+  for(let i=0;i<3;i++){
+    const slot = document.createElement('div');
+    const id = selectedIds[i];
+    slot.className = 'slot' + (id? ' filled':'');
+    if(id) slot.innerHTML = ART[id];
+    squadSlots.appendChild(slot);
+  }
+  startBattleBtn.disabled = selectedIds.length!==3;
+}
+startBattleBtn.addEventListener('click', ()=>{
+  if(selectedIds.length!==3) return;
+  sfxClick();
+  if(onlineMode){
+    startOnlineMatchmaking();
+  } else {
+    startBattle();
+  }
+});
+
+/* ---------- Shop ---------- */
+function renderShop(){
+  document.getElementById('shopCoins').textContent = account.coins;
+  const grid = document.getElementById('shopGrid');
+  grid.innerHTML = '';
+  ROSTER.forEach(p=>{
+    const isUnlocked = account.unlocked.includes(p.id);
+    const card = document.createElement('div');
+    card.className = 'plantCard' + (isUnlocked? '' : ' lockedCard');
+    if(isUnlocked){
+      const lv = account.levels[p.id]||1;
+      const eff = statsForLevel(p, lv);
+      const maxed = lv>=MAX_LEVEL;
+      const cost = upgradeCost(lv);
+      card.innerHTML = `
+        <div class="avatarWrap">${ART[p.id]}<span class="lvBadge">Lv${lv}</span></div>
+        <div class="pname">${p.name}</div>
+        <div class="statRow"><span>❤️ ${eff.hp}</span><span>⚔️ ${eff.atk}</span></div>
+        <button class="shopBtnSm" ${maxed||account.coins<cost?'disabled':''} data-action="upgrade" data-id="${p.id}">
+          ${maxed? 'حداکثر سطح ✔️' : `ارتقا (${cost} 🪙)`}
+        </button>`;
+    } else {
+      const cost = LOCK_COST[p.id];
+      card.innerHTML = `
+        <div class="avatarWrap">${ART[p.id]}<div class="lockOverlay">🔒</div></div>
+        <div class="pname">${p.name}</div>
+        <div class="statRow"><span>❤️ ${p.hp}</span><span>⚔️ ${p.atk}</span></div>
+        <button class="shopBtnSm unlockBtn" ${account.coins<cost?'disabled':''} data-action="unlock" data-id="${p.id}">
+          باز کن (${cost} 🪙)
+        </button>`;
+    }
+    grid.appendChild(card);
+  });
+  grid.querySelectorAll('button[data-action]').forEach(btn=>{
+    btn.addEventListener('click', onShopAction);
+  });
+}
+async function onShopAction(e){
+  const id = e.currentTarget.dataset.id;
+  const action = e.currentTarget.dataset.action;
+  if(action==='unlock'){
+    const cost = LOCK_COST[id];
+    if(account.coins<cost) return;
+    account.coins -= cost;
+    account.unlocked.push(id);
+    sfxUnlock();
+  } else if(action==='upgrade'){
+    const lv = account.levels[id]||1;
+    if(lv>=MAX_LEVEL) return;
+    const cost = upgradeCost(lv);
+    if(account.coins<cost) return;
+    account.coins -= cost;
+    account.levels[id] = lv+1;
+    sfxLevelUp();
+  }
+  await saveAccount(currentUser, account);
+  renderShop();
+}
+
+/* ============================================================
+   BATTLE LOGIC
+   ============================================================ */
+function cloneFighter(base, teamTag, level){
+  const eff = statsForLevel(base, level);
+  return {
+    ...base,
+    level,
+    maxHp: eff.hp,
+    curHp: eff.hp,
+    atk: eff.atk,
+    team: teamTag,
+    shielded:false,
+    usedSpecial:false,
+    saidLowHp:false
+  };
+}
+function pickEnemyTeam(){
+  const pool = [...ROSTER];
+  const picks = [];
+  while(picks.length<3 && pool.length){
+    const i = Math.floor(Math.random()*pool.length);
+    picks.push(pool.splice(i,1)[0]);
+  }
+  return picks;
+}
+/* ============================================================
+   ONLINE PVP — WebSocket client
+   ============================================================ */
+function onlineServerUrl(){
+  const proto = location.protocol === 'https:' ? 'wss:' : 'ws:';
+  const host = location.hostname || 'localhost';
+  return `${proto}//${host}:8080`;
+}
+function setOnlineStatus(msg){
+  const el=document.getElementById('onlineStatus');
+  if(el){el.style.display='block';el.textContent=msg;}
+}
+function closeOnlineSocket(){
+  try{ if(onlineSocket) onlineSocket.close(); }catch(e){}
+  onlineSocket=null; onlineSide=null; onlineTurn=null; onlineMatchId=null;
+}
+function startOnlineMatchmaking(){
+  if(onlineSocket && onlineSocket.readyState===1){
+    onlineSocket.send(JSON.stringify({type:'queue',username:currentUser,team:selectedIds.map(id=>({id,level:account.levels[id]||1}))}));
+    setOnlineStatus('⏳ در صف پیدا کردن حریف...');
+    return;
+  }
+  const url=onlineServerUrl();
+  setOnlineStatus('🔌 در حال اتصال به سرور...');
+  try{
+    onlineSocket=new WebSocket(url);
+  }catch(e){ setOnlineStatus('❌ اتصال به سرور انجام نشد'); return; }
+  onlineSocket.onopen=()=>{
+    onlineSocket.send(JSON.stringify({type:'queue',username:currentUser,team:selectedIds.map(id=>({id,level:account.levels[id]||1}))}));
+    setOnlineStatus('⏳ منتظر حریف واقعی...');
+  };
+  onlineSocket.onmessage=(ev)=>{
+    let m; try{m=JSON.parse(ev.data)}catch(e){return;}
+    if(m.type==='queued'){ setOnlineStatus('⏳ حریف در حال پیدا شدن است...'); }
+    if(m.type==='match'){
+      onlineSide=m.side; onlineTurn=m.turn; onlineMatchId=m.matchId;
+      const opponent=m.opponent;
+      const myBase=selectedIds.map(id=>ROSTER.find(r=>r.id===id)).filter(Boolean);
+      const enemyBase=(opponent.team||[]).map(x=>ROSTER.find(r=>r.id===x.id)).filter(Boolean);
+      battle={
+        player:myBase.map((p,i)=>cloneFighter(p,'player',(selectedIds[i] && account.levels[selectedIds[i]])||1)),
+        enemy:enemyBase.map((p,i)=>cloneFighter(p,'enemy',opponent.team[i]?.level||1)),
+        chosenAttacker:null,chosenAction:null,locked:(onlineTurn!==onlineSide)
+      };
+      showScreen('battle'); renderBattle();
+      setLog(onlineTurn===onlineSide?'🎮 نوبت توئه! حمله کن.':'⏳ حریف داره فکر می‌کنه...');
+    }
+    if(m.type==='action'){
+      onlineTurn=m.nextTurn;
+      executeRemoteOnlineAction(m.action, ()=>{
+        battle.locked = onlineTurn!==onlineSide;
+        renderAllyPicker(); updateActionButtons(); updateHint();
+        if(!battle.locked) setLog('🎮 نوبت توئه!');
+      });
+    }
+    if(m.type==='opponent_left'){
+      setLog('🏆 حریف از بازی خارج شد! تو برنده‌ای.');
+      if(battle){ battle.locked=true; setTimeout(()=>finishBattle(true),500); }
+    }
+    if(m.type==='error'){ setOnlineStatus('❌ '+(m.message||'خطای سرور')); }
+  };
+  onlineSocket.onclose=()=>{
+    if(battle && onlineMode && !document.getElementById('resultScreen').classList.contains('active')){
+      setLog('⚠️ ارتباط با سرور قطع شد.');
+      battle.locked=true;
+    }
+  };
+  onlineSocket.onerror=()=>setOnlineStatus('❌ سرور در دسترس نیست. اول server را اجرا کن.');
+}
+function sendOnlineAction(target){
+  if(!onlineMode || !onlineSocket || onlineSocket.readyState!==1 || onlineTurn!==onlineSide) return false;
+  const attacker=battle.chosenAttacker, action=battle.chosenAction;
+  if(!attacker || !action) return false;
+  const payload={
+    type:'action', matchId:onlineMatchId,
+    action:{action, attackerId:attacker.id, targetId:target?target.id:null}
+  };
+  onlineSocket.send(JSON.stringify(payload));
+  return true;
+}
+function executeRemoteOnlineAction(a, done){
+  const attacker=battle.enemy.find(f=>f.id===a.attackerId);
+  const target=a.targetId ? [...battle.player,...battle.enemy].find(f=>f.id===a.targetId) : null;
+  if(!attacker || attacker.curHp<=0){ done(); return; }
+  battle.locked=true;
+  const attackerEl=fighterEl(attacker);
+  if(attackerEl) attackerEl.classList.add('attackingEnemy');
+  if(attacker.lines) showBubble(attacker,a.action==='special'?randomLine(attacker.lines.special):randomLine(attacker.lines.attack));
+  setTimeout(()=>{
+    if(attackerEl) attackerEl.classList.remove('attackingEnemy');
+    if(a.action==='attack' && target){ sfxHit(); dealDamage(attacker,target,attacker.atk+Math.floor(Math.random()*6)); setTimeout(()=>{checkGameOver();done();},420); return; }
+    if(a.action==='special'){
+      attacker.usedSpecial=true;
+      const ab=attacker.ability;
+      if((ab==='power'||ab==='double') && target){
+        sfxHit(); dealDamage(attacker,target,ab==='power'?Math.floor(attacker.atk*1.9)+Math.floor(Math.random()*6):Math.floor(attacker.atk*.7));
+        if(ab==='double' && target.curHp>0) setTimeout(()=>{sfxHit();dealDamage(attacker,target,Math.floor(attacker.atk*.7));setTimeout(()=>{checkGameOver();done();},420)},420);
+        else setTimeout(()=>{checkGameOver();done();},420);
+      } else if(ab==='heal'){
+        const lowest=[...battle.enemy].filter(f=>f.curHp>0).sort((x,y)=>(x.curHp/x.maxHp)-(y.curHp/y.maxHp))[0];
+        if(lowest){sfxHeal();const h=Math.floor(lowest.maxHp*.32);lowest.curHp=Math.min(lowest.maxHp,lowest.curHp+h);popText(lowest,'+'+h,true);refreshHp(lowest);setLog(`${attacker.name} تیمش رو شفا داد! (+${h})`);}
+        setTimeout(()=>{checkGameOver();done();},500);
+      } else if(ab==='shield'){
+        sfxShield();attacker.shielded=true;setLog(`${attacker.name} سپر گرفت! 🛡️`);renderBattle();setTimeout(()=>{checkGameOver();done();},500);
+      }
+      return;
+    }
+    done();
+  },260);
+}
+
+function startBattle(){
+  const playerBase = selectedIds.map(id=>ROSTER.find(r=>r.id===id));
+  const enemyBase = pickEnemyTeam();
+  const enemyLevel = Math.min(MAX_LEVEL, 1+Math.floor(account.wins/3));
+  battle = {
+    player: playerBase.map(p=>cloneFighter(p,'player', account.levels[p.id]||1)),
+    enemy: enemyBase.map(p=>cloneFighter(p,'enemy', enemyLevel)),
+    chosenAttacker:null, chosenAction:null, locked:false
+  };
+  showScreen('battle');
+  renderBattle();
+  setLog('نبرد شروع شد! یکی از گل‌هات رو انتخاب کن.');
+}
+function setLog(msg){ document.getElementById('logBox').textContent = msg; }
+function fighterEl(f){ return document.querySelector(`[data-uid="${f.uid}"]`); }
+
+function renderBattle(){
+  battle.enemy.forEach((f,i)=>f.uid = 'e'+i);
+  battle.player.forEach((f,i)=>f.uid = 'p'+i);
+  const enemyRow = document.getElementById('enemyRow');
+  const playerRow = document.getElementById('playerRow');
+  enemyRow.innerHTML = ''; playerRow.innerHTML = '';
+  battle.enemy.forEach(f=> enemyRow.appendChild(buildFighterCard(f)) );
+  battle.player.forEach(f=> playerRow.appendChild(buildFighterCard(f)) );
+  renderAllyPicker();
+  updateActionButtons();
+}
+function buildFighterCard(f){
+  const div = document.createElement('div');
+  div.className = 'fighter' + (f.curHp<=0?' dead':'');
+  div.dataset.uid = f.uid;
+  div.innerHTML = `
+    <div class="avatarBox">${ART[f.id]}</div>
+    <div class="nameTag">${f.name} Lv${f.level}${f.shielded?' 🛡️':''}</div>
+    <div class="hpWrap"><div class="hpFill${f.curHp/f.maxHp<0.3?' low':''}" style="width:${Math.max(0,f.curHp/f.maxHp*100)}%"></div></div>
+  `;
+  if(f.team==='enemy'){ div.addEventListener('click', ()=> onEnemyClick(f)); }
+  return div;
+}
+function renderAllyPicker(){
+  const wrap = document.getElementById('allyPicker');
+  wrap.innerHTML = '';
+  battle.player.forEach(f=>{
+    const chip = document.createElement('div');
+    chip.className = 'allyChip'
+      + (battle.chosenAttacker===f ? ' selected':'')
+      + (f.usedSpecial ? ' usedSpecial':'')
+      + (f.curHp<=0 ? ' deadChip':'');
+    chip.innerHTML = ART[f.id];
+    chip.addEventListener('click', ()=>onAllyPick(f));
+    wrap.appendChild(chip);
+  });
+}
+function onAllyPick(f){
+  if(battle.locked || f.curHp<=0) return;
+  sfxClick();
+  battle.chosenAttacker = (battle.chosenAttacker===f)? null : f;
+  battle.chosenAction = null;
+  renderAllyPicker(); updateActionButtons(); updateHint();
+}
+function updateActionButtons(){
+  const atkBtn = document.getElementById('attackBtn');
+  const spBtn = document.getElementById('specialBtn');
+  const has = !!battle.chosenAttacker;
+  atkBtn.disabled = !has || battle.locked;
+  spBtn.disabled = !has || battle.locked || (has && battle.chosenAttacker.usedSpecial);
+  spBtn.textContent = has ? (battle.chosenAttacker.abilityName + ' ✨') : 'توانایی ویژه ✨';
+}
+function updateHint(){
+  const hint = document.getElementById('hintText');
+  if(!battle.chosenAttacker){ hint.textContent='اول یکی از گل‌هات رو انتخاب کن'; return; }
+  if(!battle.chosenAction){ hint.textContent = 'حمله عادی یا توانایی ویژه رو بزن'; return; }
+  if(needsEnemyTarget()){ hint.textContent = 'حالا روی یک دشمن بزن 👆'; }
+}
+function needsEnemyTarget(){
+  if(!battle.chosenAction) return false;
+  if(battle.chosenAction==='attack') return true;
+  if(battle.chosenAction==='special'){
+    const ab = battle.chosenAttacker.ability;
+    return ab==='power' || ab==='double';
+  }
+  return false;
+}
+document.getElementById('attackBtn').addEventListener('click', ()=>{
+  if(!battle.chosenAttacker || battle.locked) return;
+  sfxClick();
+  battle.chosenAction='attack';
+  document.querySelectorAll('#enemyRow .fighter').forEach(el=>{
+    const f = findByUid(el.dataset.uid);
+    if(f && f.curHp>0) el.classList.add('targetable');
+  });
+  updateHint();
+});
+document.getElementById('specialBtn').addEventListener('click', ()=>{
+  if(!battle.chosenAttacker || battle.locked || battle.chosenAttacker.usedSpecial) return;
+  sfxClick();
+  battle.chosenAction='special';
+  const ab = battle.chosenAttacker.ability;
+  if(ab==='power' || ab==='double'){
+    document.querySelectorAll('#enemyRow .fighter').forEach(el=>{
+      const f = findByUid(el.dataset.uid);
+      if(f && f.curHp>0) el.classList.add('targetable');
+    });
+    updateHint();
+  } else {
+    resolvePlayerAction(null);
+  }
+});
+function findByUid(uid){ return [...battle.player, ...battle.enemy].find(f=>f.uid===uid); }
+function onEnemyClick(target){
+  if(battle.locked) return;
+  if(!battle.chosenAttacker || !battle.chosenAction) return;
+  if(!needsEnemyTarget()) return;
+  if(target.curHp<=0) return;
+  resolvePlayerAction(target);
+}
+
+function showBubble(fighter, text){
+  const el = fighterEl(fighter);
+  if(!el || !text) return;
+  const bubble = document.createElement('div');
+  bubble.className = 'speechBubble';
+  bubble.textContent = text;
+  el.querySelector('.avatarBox').appendChild(bubble);
+  setTimeout(()=>bubble.remove(), 1700);
+}
+function randomLine(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
+
+/* ---------- Action resolution ---------- */
+function resolvePlayerAction(target){
+  battle.locked = true;
+  document.querySelectorAll('.fighter').forEach(el=>el.classList.remove('targetable'));
+  const attacker = battle.chosenAttacker;
+  const action = battle.chosenAction;
+  if(onlineMode && !sendOnlineAction(target)){ battle.locked=false; return; }
+  const attackerEl = fighterEl(attacker);
+  attackerEl.classList.add('attacking');
+
+  if(action==='attack' && attacker.lines) showBubble(attacker, randomLine(attacker.lines.attack));
+  if(action==='special' && attacker.lines) showBubble(attacker, randomLine(attacker.lines.special));
+
+  setTimeout(()=>{
+    attackerEl.classList.remove('attacking');
+    if(action==='attack'){
+      sfxHit();
+      dealDamage(attacker, target, attacker.atk + Math.floor(Math.random()*6));
+      afterHitStep(target, ()=> finishPlayerTurn());
+    } else if(action==='special'){
+      const ab = attacker.ability;
+      attacker.usedSpecial = true;
+      if(ab==='power'){
+        sfxHit();
+        const dmg = Math.floor(attacker.atk*1.9) + Math.floor(Math.random()*6);
+        dealDamage(attacker, target, dmg);
+        afterHitStep(target, ()=> finishPlayerTurn());
+      } else if(ab==='double'){
+        sfxHit();
+        dealDamage(attacker, target, Math.floor(attacker.atk*0.7));
+        afterHitStep(target, ()=>{
+          if(target.curHp>0){
+            attackerEl.classList.add('attacking');
+            setTimeout(()=>{
+              attackerEl.classList.remove('attacking');
+              sfxHit();
+              dealDamage(attacker, target, Math.floor(attacker.atk*0.7));
+              afterHitStep(target, ()=> finishPlayerTurn());
+            }, 260);
+          } else { finishPlayerTurn(); }
+        });
+      } else if(ab==='heal'){
+        sfxHeal();
+        const lowest = [...battle.player].filter(f=>f.curHp>0).sort((a,b)=>(a.curHp/a.maxHp)-(b.curHp/b.maxHp))[0];
+        const healAmt = Math.floor(lowest.maxHp*0.32);
+        lowest.curHp = Math.min(lowest.maxHp, lowest.curHp+healAmt);
+        popText(lowest, '+'+healAmt, true);
+        refreshHp(lowest);
+        setLog(`${attacker.name} به ${lowest.name} جان بخشید! (+${healAmt})`);
+        setTimeout(()=> finishPlayerTurn(), 500);
+      } else if(ab==='shield'){
+        sfxShield();
+        attacker.shielded = true;
+        setLog(`${attacker.name} یک سپر محافظ فعال کرد! 🛡️`);
+        renderBattle();
+        setTimeout(()=> finishPlayerTurn(), 500);
+      }
+    }
+  }, 260);
+}
+
+function dealDamage(attacker, target, dmg){
+  if(target.shielded){
+    dmg = Math.floor(dmg*0.35);
+    target.shielded = false;
+    setLog(`${attacker.name} به ${target.name} زد ولی سپرش ضربه رو کم کرد! (-${dmg})`);
+  } else {
+    setLog(`${attacker.name} به ${target.name} ضربه زد! (-${dmg})`);
+  }
+  target.curHp = Math.max(0, target.curHp - dmg);
+  popText(target, '-'+dmg, false);
+  const el = fighterEl(target);
+  if(el){ el.classList.add('hit'); setTimeout(()=>el.classList.remove('hit'), 400); }
+  refreshHp(target);
+  if(target.curHp<=0){ target.alive=false; }
+  else if(target.curHp/target.maxHp < 0.3 && !target.saidLowHp && target.lines){
+    target.saidLowHp = true;
+    setTimeout(()=> showBubble(target, randomLine(target.lines.lowhp)), 300);
+  }
+}
+function popText(fighter, text, isHeal){
+  const el = fighterEl(fighter);
+  if(!el) return;
+  const pop = document.createElement('div');
+  pop.className = 'dmgPop' + (isHeal?' heal':'');
+  pop.textContent = text;
+  el.querySelector('.avatarBox').appendChild(pop);
+  setTimeout(()=>pop.remove(), 900);
+}
+function refreshHp(fighter){
+  const el = fighterEl(fighter);
+  if(!el) return;
+  const fill = el.querySelector('.hpFill');
+  const pct = Math.max(0, fighter.curHp/fighter.maxHp*100);
+  fill.style.width = pct+'%';
+  fill.classList.toggle('low', fighter.curHp/fighter.maxHp<0.3);
+  if(fighter.curHp<=0){ el.classList.add('dead'); }
+}
+function afterHitStep(target, cb){ setTimeout(cb, 420); }
+
+function finishPlayerTurn(){
+  battle.chosenAttacker = null;
+  battle.chosenAction = null;
+  if(checkGameOver()) return;
+  if(onlineMode){
+    battle.locked=true;
+    renderAllyPicker(); updateActionButtons(); updateHint();
+    setLog('⏳ حرکتت ثبت شد؛ منتظر نوبت حریف...');
+    return;
+  }
+  renderAllyPicker(); updateActionButtons();
+  setTimeout(enemyTurn, 500);
+}
+
+/* ---------- Enemy AI turn ---------- */
+function enemyTurn(){
+  const aliveEnemies = battle.enemy.filter(f=>f.curHp>0);
+  const alivePlayers = battle.player.filter(f=>f.curHp>0);
+  if(aliveEnemies.length===0 || alivePlayers.length===0){ checkGameOver(); return; }
+
+  const attacker = aliveEnemies[Math.floor(Math.random()*aliveEnemies.length)];
+  const target = alivePlayers[Math.floor(Math.random()*alivePlayers.length)];
+  const useSpecial = !attacker.usedSpecial && Math.random()<0.4;
+  const attackerEl = fighterEl(attacker);
+  attackerEl.classList.add('attackingEnemy');
+
+  if(attacker.lines) showBubble(attacker, useSpecial? randomLine(attacker.lines.special) : randomLine(attacker.lines.attack));
+
+  setTimeout(()=>{
+    attackerEl.classList.remove('attackingEnemy');
+    if(useSpecial){
+      attacker.usedSpecial = true;
+      const ab = attacker.ability;
+      if(ab==='power'){
+        sfxHit();
+        dealDamage(attacker, target, Math.floor(attacker.atk*1.9)+Math.floor(Math.random()*6));
+        setTimeout(afterEnemyStep, 420);
+      } else if(ab==='double'){
+        sfxHit();
+        dealDamage(attacker, target, Math.floor(attacker.atk*0.7));
+        setTimeout(()=>{
+          if(target.curHp>0){
+            attackerEl.classList.add('attackingEnemy');
+            setTimeout(()=>{
+              attackerEl.classList.remove('attackingEnemy');
+              sfxHit();
+              dealDamage(attacker, target, Math.floor(attacker.atk*0.7));
+              setTimeout(afterEnemyStep, 420);
+            },260);
+          } else { afterEnemyStep(); }
+        },420);
+      } else if(ab==='heal'){
+        sfxHeal();
+        const lowest = [...battle.enemy].filter(f=>f.curHp>0).sort((a,b)=>(a.curHp/a.maxHp)-(b.curHp/b.maxHp))[0];
+        const healAmt = Math.floor(lowest.maxHp*0.32);
+        lowest.curHp = Math.min(lowest.maxHp, lowest.curHp+healAmt);
+        popText(lowest,'+'+healAmt,true);
+        refreshHp(lowest);
+        setLog(`${attacker.name} تیمش رو شفا داد! (+${healAmt})`);
+        setTimeout(afterEnemyStep, 500);
+      } else if(ab==='shield'){
+        sfxShield();
+        attacker.shielded = true;
+        setLog(`${attacker.name} سپر گرفت! 🛡️`);
+        renderBattle();
+        setTimeout(afterEnemyStep, 500);
+      }
+    } else {
+      sfxHit();
+      dealDamage(attacker, target, attacker.atk + Math.floor(Math.random()*6));
+      setTimeout(afterEnemyStep, 420);
+    }
+  }, 260);
+}
+function afterEnemyStep(){
+  if(checkGameOver()) return;
+  battle.locked = false;
+  renderAllyPicker(); updateActionButtons(); updateHint();
+}
+
+/* ---------- Game over ---------- */
+function checkGameOver(){
+  const playerAlive = battle.player.some(f=>f.curHp>0);
+  const enemyAlive = battle.enemy.some(f=>f.curHp>0);
+  if(!playerAlive || !enemyAlive){
+    battle.locked = true;
+    const won = playerAlive && !enemyAlive;
+    setTimeout(()=> finishBattle(won), 500);
+    return true;
+  }
+  return false;
+}
+async function finishBattle(won){
+  let reward;
+  if(won){
+    reward = 25 + Math.floor(Math.random()*16);
+    account.coins += reward;
+    account.wins += 1;
+  } else {
+    reward = 8;
+    account.coins += reward;
+    account.losses += 1;
+  }
+  await saveAccount(currentUser, account);
+  showResult(won, reward);
+}
+function showResult(won, reward){
+  showScreen('result');
+  document.getElementById('resultIcon').textContent = won ? '🏆' : '😵';
+  document.getElementById('resultTitle').textContent = won ? 'پیروزی!' : 'شکست!';
+  document.getElementById('resultSub').textContent = won ? 'تیم گل‌های تو برنده شد' : 'تیم حریف این‌بار برد';
+  document.getElementById('resultQuote').textContent = '«' + randomLine(won?VICTORY_LINES:DEFEAT_LINES) + '»';
+  document.getElementById('rewardLine').textContent = `+${reward} 🪙 سکه گرفتی`;
+  if(won){ sfxVictory(); launchConfetti(); } else { sfxDefeat(); }
+}
+function launchConfetti(){
+  const colors = ['#FF6E5A','#FFC24B','#3FA672','#5AC8E8','#9C6AE0'];
+  for(let i=0;i<40;i++){
+    const c = document.createElement('div');
+    c.className='confetti';
+    c.style.left = Math.random()*100+'%';
+    c.style.background = colors[Math.floor(Math.random()*colors.length)];
+    c.style.animationDuration = (2+Math.random()*1.5)+'s';
+    c.style.animationDelay = (Math.random()*0.6)+'s';
+    screens.result.appendChild(c);
+    setTimeout(()=>c.remove(), 4000);
+  }
+}
+document.getElementById('playAgainBtn').addEventListener('click', ()=>{
+  sfxClick();
+  closeOnlineSocket();
+  onlineMode=false;
+  selectedIds = [];
+  renderGrid(); renderSquadSlots();
+  showScreen('select');
+});
+</script>
+</body>
+</html>
