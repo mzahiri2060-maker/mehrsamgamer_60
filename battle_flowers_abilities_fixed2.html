@@ -1,0 +1,2011 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>نبرد گل‌ها</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@500;700;800;900&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --sky-top:#FFE29A;
+    --sky-bot:#7FE3C6;
+    --card:#FFFDF7;
+    --ink:#2C2140;
+    --ink-soft:#6b5f82;
+    --coral:#FF6E5A;
+    --coral-dark:#E85341;
+    --leaf:#3FA672;
+    --leaf-dark:#2E8259;
+    --sun:#FFC24B;
+    --gold:#E8A93B;
+    --danger:#FF5C6C;
+    --shadow: 0 10px 24px rgba(50,30,10,0.18);
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color: transparent;}
+  html,body{margin:0;padding:0;height:100%;overscroll-behavior:none;}
+  body{
+    font-family:'Vazirmatn', sans-serif;
+    background: linear-gradient(180deg, var(--sky-top) 0%, var(--sky-bot) 100%);
+    color:var(--ink);
+    min-height:100%;
+    display:flex;
+    justify-content:center;
+    overflow-x:hidden;
+    user-select:none;
+  }
+  #app{
+    width:100%;
+    max-width:480px;
+    min-height:100vh;
+    position:relative;
+    display:flex;
+    flex-direction:column;
+    padding-bottom:env(safe-area-inset-bottom);
+  }
+  .screen{display:none; flex-direction:column; flex:1; animation: fadeIn .35s ease;}
+  .screen.active{display:flex;}
+  @keyframes fadeIn{from{opacity:0; transform:translateY(8px);} to{opacity:1; transform:translateY(0);}}
+
+  /* ---------- Header ---------- */
+  .topbar{
+    padding:16px 18px 8px;
+    text-align:center;
+    flex-shrink:0;
+    position:relative;
+  }
+  .topbar h1{
+    margin:0;
+    font-size:22px;
+    font-weight:900;
+    color:var(--ink);
+    text-shadow: 0 2px 0 rgba(255,255,255,0.6);
+    letter-spacing:0.5px;
+  }
+  .topbar p{
+    margin:4px 0 0;
+    font-size:13px;
+    color:var(--ink-soft);
+    font-weight:700;
+  }
+  .iconBtn{
+    position:absolute; top:14px;
+    width:36px; height:36px; border-radius:50%;
+    background:rgba(255,255,255,0.7); border:none;
+    display:flex; align-items:center; justify-content:center;
+    font-size:17px; box-shadow:var(--shadow); cursor:pointer;
+  }
+  .iconBtn.left{left:14px;}
+  .iconBtn.right{right:14px;}
+
+  .hud{
+    display:flex; align-items:center; justify-content:center; gap:6px;
+    background:rgba(255,255,255,0.65); border-radius:14px;
+    padding:6px 14px; margin:0 auto; width:fit-content; font-weight:900; font-size:14px;
+  }
+
+  /* ---------- Login screen ---------- */
+  #loginScreen{align-items:center; justify-content:center; padding:24px; text-align:center;}
+  .loginCard{
+    background:var(--card); border-radius:22px; padding:26px 22px;
+    box-shadow:var(--shadow); width:100%; max-width:320px;
+  }
+  .loginCard .emoji{font-size:46px; margin-bottom:4px; animation: idleBob 2.4s ease-in-out infinite;}
+  .loginCard h2{margin:0 0 4px; font-size:20px; font-weight:900;}
+  .loginCard p.sub{margin:0 0 18px; color:var(--ink-soft); font-size:12.5px; font-weight:700;}
+  .field{text-align:right; margin-bottom:12px;}
+  .field label{display:block; font-size:12px; font-weight:800; margin-bottom:4px; color:var(--ink-soft);}
+  .field input{
+    width:100%; padding:12px 14px; border-radius:12px; border:2px solid #eadfc9;
+    background:#fffaf0; font-family:inherit; font-size:15px; font-weight:700; color:var(--ink);
+    outline:none;
+  }
+  .field input:focus{border-color:var(--leaf);}
+  .loginErr{color:var(--danger); font-size:12.5px; font-weight:800; min-height:16px; margin-bottom:6px;}
+  .loginNote{font-size:10.5px; color:var(--ink-soft); font-weight:600; margin-top:10px; line-height:1.5;}
+
+  /* ---------- Buttons (shared) ---------- */
+  .bigBtn{
+    background:linear-gradient(180deg, #4FC58A, var(--leaf-dark));
+    color:#fff; border:none; border-radius:18px;
+    padding:15px; font-size:16px; font-weight:900;
+    font-family:inherit; width:100%;
+    box-shadow:0 8px 0 #1f6b45, 0 14px 20px rgba(0,0,0,0.2);
+    transition: all .1s ease;
+    cursor:pointer;
+  }
+  .bigBtn:disabled{background:#bcbcbc; box-shadow:0 8px 0 #8c8c8c; color:#f1f1f1;}
+  .bigBtn:not(:disabled):active{transform:translateY(6px); box-shadow:0 2px 0 #1f6b45;}
+  .fixedBtn{position:fixed; bottom:16px; left:50%; transform:translateX(-50%); width:calc(100% - 36px); max-width:444px; z-index:20;}
+  .fixedBtn:active{transform:translateX(-50%) translateY(6px) !important;}
+
+  .ghostBtn{
+    background:rgba(255,255,255,0.7); color:var(--ink); border:none; border-radius:14px;
+    padding:12px; font-family:inherit; font-weight:800; font-size:13.5px; width:100%;
+    box-shadow:var(--shadow); cursor:pointer;
+  }
+  .ghostBtn:active{transform:scale(0.97);}
+
+  /* ---------- Home screen ---------- */
+  #homeScreen{padding:6px 18px 20px; justify-content:flex-start; flex:1;}
+  .homeHero{
+    background:var(--card); border-radius:22px; padding:18px; box-shadow:var(--shadow);
+    text-align:center; margin:8px 0 16px;
+  }
+  .homeHero .avatarsPreview{display:flex; justify-content:center; gap:-6px; margin-bottom:8px;}
+  .homeHero .avatarsPreview svg{width:52px; height:52px; margin:0 -6px; animation: idleBob 2.6s ease-in-out infinite;}
+  .homeHero h2{margin:2px 0 2px; font-size:18px; font-weight:900;}
+  .homeHero .statsLine{font-size:12px; color:var(--ink-soft); font-weight:700;}
+  .menuStack{display:flex; flex-direction:column; gap:12px; margin-top:6px;}
+
+  /* ---------- Selection screen ---------- */
+  #squadInfo{
+    margin:0 18px 10px;
+    background:rgba(255,255,255,0.55);
+    border-radius:16px;
+    padding:10px 14px;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    font-weight:800;
+    font-size:14px;
+    flex-shrink:0;
+  }
+  #squadSlots{display:flex; gap:6px;}
+  .slot{
+    width:26px;height:26px;border-radius:50%;
+    background:#fff;
+    border:2px dashed #cbb;
+    display:flex;align-items:center;justify-content:center;
+    overflow:hidden;
+  }
+  .slot.filled{border:2px solid var(--leaf); background:#fff;}
+  .slot svg{width:100%;height:100%;}
+
+  #plantGrid, #shopGrid{
+    flex:1;
+    overflow-y:auto;
+    padding:6px 14px 100px;
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:12px;
+    -webkit-overflow-scrolling:touch;
+  }
+  .plantCard{
+    background:var(--card);
+    border-radius:20px;
+    padding:12px 10px 10px;
+    box-shadow:var(--shadow);
+    text-align:center;
+    position:relative;
+    border:3px solid transparent;
+    transition: transform .15s ease, border-color .15s ease, box-shadow .15s ease;
+    cursor:pointer;
+  }
+  .plantCard:active{transform:scale(0.95);}
+  .plantCard.selected{
+    border-color:var(--leaf);
+    box-shadow:0 10px 24px rgba(46,130,89,0.35);
+  }
+  .plantCard .avatarWrap{
+    width:82px;height:82px;margin:0 auto 6px;
+    display:flex;align-items:center;justify-content:center;
+    position:relative;
+  }
+  .plantCard svg{width:100%;height:100%; animation: idleBob 2.6s ease-in-out infinite;}
+  .plantCard .pname{font-size:13px; font-weight:800; margin:2px 0 4px;}
+  .lvBadge{
+    position:absolute; bottom:-2px; right:-2px; background:var(--gold); color:#fff;
+    font-size:10px; font-weight:900; padding:2px 6px; border-radius:8px; box-shadow:0 2px 4px rgba(0,0,0,0.2);
+  }
+  .statRow{display:flex; justify-content:center; gap:8px; font-size:10px; font-weight:800; color:var(--ink-soft);}
+  .statRow span{display:flex; align-items:center; gap:2px;}
+  .checkBadge{
+    position:absolute; top:8px; left:8px;
+    width:22px;height:22px;border-radius:50%;
+    background:var(--leaf); color:#fff;
+    display:flex;align-items:center;justify-content:center;
+    font-size:13px; font-weight:900;
+    opacity:0; transform:scale(0.5);
+    transition: all .15s ease;
+  }
+  .plantCard.selected .checkBadge{opacity:1; transform:scale(1);}
+
+  /* shop card variants */
+  .plantCard.lockedCard .avatarWrap svg{filter:grayscale(1) brightness(0.6);}
+  .lockOverlay{
+    position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
+    font-size:26px;
+  }
+  .shopBtnSm{
+    margin-top:6px; width:100%; border:none; border-radius:10px; padding:8px 4px;
+    font-family:inherit; font-weight:900; font-size:12px; color:#fff;
+    background:linear-gradient(180deg,#FFCE63,var(--gold)); box-shadow:0 4px 0 #b9822a;
+    cursor:pointer;
+  }
+  .shopBtnSm:disabled{background:#cfcfcf; box-shadow:0 4px 0 #a2a2a2; color:#eee;}
+  .shopBtnSm:not(:disabled):active{transform:translateY(3px); box-shadow:0 1px 0 #b9822a;}
+  .shopBtnSm.unlockBtn{background:linear-gradient(180deg,#8E6FE0,#6A4CC0); box-shadow:0 4px 0 #4a339c;}
+  .shopBtnSm.unlockBtn:not(:disabled):active{box-shadow:0 1px 0 #4a339c;}
+
+  @keyframes idleBob{
+    0%,100%{transform:translateY(0) rotate(0deg);}
+    50%{transform:translateY(-4px) rotate(-2deg);}
+  }
+
+  /* ---------- Battle screen ---------- */
+  #battleScreen{padding:6px 14px 16px; flex:1;}
+  .row{display:flex; justify-content:space-around; align-items:flex-end; gap:6px; padding:6px 0;}
+  .enemyRow{padding-top:2px;}
+  .fighter{
+    width:30%;
+    display:flex; flex-direction:column; align-items:center;
+    position:relative;
+    transition: transform .25s ease, opacity .3s ease;
+  }
+  .fighter.dead{opacity:0.25; filter:grayscale(1); pointer-events:none;}
+  .fighter .avatarBox{
+    width:66px;height:66px;
+    position:relative;
+    display:flex;align-items:center;justify-content:center;
+  }
+  .fighter svg{width:100%;height:100%; animation: idleBob 2.4s ease-in-out infinite;}
+  .fighter.targetable svg{filter: drop-shadow(0 0 6px rgba(255,110,90,0.9));}
+  .poisonBadge{position:absolute;top:-5px;right:-5px;background:linear-gradient(135deg,#a8ff74,#32a852);color:#17351f;border:2px solid #fff;border-radius:12px;padding:2px 5px;font-size:10px;font-weight:900;box-shadow:0 3px 8px rgba(30,120,40,.35);animation:poisonPulse 1s ease-in-out infinite;}
+  @keyframes poisonPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.12)}}
+  .fighter.poisoned .avatarBox{filter:drop-shadow(0 0 7px rgba(71,210,78,.9));}
+  .fighter .nameTag{font-size:9.5px; font-weight:800; margin-top:2px; max-width:78px; text-align:center; line-height:1.1;}
+  .hpWrap{
+    width:74px; height:9px; border-radius:6px; background:rgba(0,0,0,0.15);
+    margin-top:3px; overflow:hidden; box-shadow: inset 0 1px 2px rgba(0,0,0,0.2);
+  }
+  .hpFill{height:100%; background:linear-gradient(180deg,#7BE0A0,#38B06A); border-radius:6px; transition: width .5s cubic-bezier(.2,.8,.3,1); width:100%;}
+  .hpFill.low{background:linear-gradient(180deg,#FF9B8F,var(--danger));}
+  .fighter.attacking svg{animation: lungeSelf .5s ease;}
+  .fighter.attackingEnemy svg{animation: lungeEnemy .5s ease;}
+  .fighter.hit svg{animation: hitShake .4s ease;}
+  .fighter.exploding .avatarBox{animation: pineappleBoom .72s ease both; filter:drop-shadow(0 0 16px rgba(255,180,45,.95));}
+  .fighter.heroRaged .avatarBox{animation:heroRagePulse 1.1s ease-in-out infinite; filter:drop-shadow(0 0 13px rgba(255,105,55,.9));}
+  @keyframes heroRagePulse{0%,100%{transform:scale(1)}50%{transform:scale(1.045)}}
+  .fighter.exploding svg{animation: pineappleSpin .72s ease both;}
+  .fighter.hit .avatarBox{animation: flashRed .4s ease;}
+  @keyframes lungeSelf{
+    0%{transform:translateY(0);}
+    35%{transform:translateY(-16px) scale(1.08);}
+    55%{transform:translateY(4px) scale(0.96);}
+    100%{transform:translateY(0);}
+  }
+  @keyframes lungeEnemy{
+    0%{transform:translateY(0);}
+    35%{transform:translateY(16px) scale(1.08);}
+    55%{transform:translateY(-4px) scale(0.96);}
+    100%{transform:translateY(0);}
+  }
+  @keyframes hitShake{
+    0%,100%{transform:translateX(0);}
+    20%{transform:translateX(-8px) rotate(-4deg);}
+    40%{transform:translateX(8px) rotate(4deg);}
+    60%{transform:translateX(-6px) rotate(-3deg);}
+    80%{transform:translateX(6px) rotate(3deg);}
+  }
+  @keyframes flashRed{
+    0%,100%{filter:none;}
+    40%{filter: brightness(1.6) saturate(3) hue-rotate(-10deg);}
+  }
+  @keyframes pineappleBoom{
+    0%{transform:scale(1); opacity:1} 45%{transform:scale(1.18); opacity:1} 100%{transform:scale(.12); opacity:.08}
+  }
+  @keyframes pineappleSpin{
+    0%{transform:rotate(0deg) scale(1)} 55%{transform:rotate(18deg) scale(1.2)} 100%{transform:rotate(55deg) scale(.1)}
+  }
+
+  .dmgPop{
+    position:absolute; top:-6px; left:50%; transform:translateX(-50%);
+    font-weight:900; font-size:17px; color:var(--danger);
+    text-shadow: 0 2px 0 #fff, 0 0 6px rgba(255,255,255,0.8);
+    pointer-events:none;
+    animation: popUp .9s ease forwards;
+    z-index:30;
+  }
+  .dmgPop.heal{color:var(--leaf-dark);}
+  @keyframes popUp{
+    0%{opacity:0; transform:translate(-50%,0) scale(0.6);}
+    20%{opacity:1; transform:translate(-50%,-14px) scale(1.15);}
+    100%{opacity:0; transform:translate(-50%,-46px) scale(1);}
+  }
+
+  .speechBubble{
+    position:absolute; bottom:100%; left:50%; transform:translateX(-50%);
+    background:#fff; color:var(--ink); font-size:10.5px; font-weight:800;
+    padding:5px 9px; border-radius:10px; white-space:nowrap; max-width:none;
+    box-shadow:0 3px 8px rgba(0,0,0,0.2);
+    pointer-events:none; z-index:31;
+    animation: bubblePop 1.7s ease forwards;
+  }
+  .speechBubble::after{
+    content:''; position:absolute; top:100%; left:50%; transform:translateX(-50%);
+    border:5px solid transparent; border-top-color:#fff;
+  }
+  @keyframes bubblePop{
+    0%{opacity:0; transform:translateX(-50%) translateY(6px) scale(0.7);}
+    12%{opacity:1; transform:translateX(-50%) translateY(-2px) scale(1);}
+    82%{opacity:1;}
+    100%{opacity:0; transform:translateX(-50%) translateY(-10px) scale(0.9);}
+  }
+
+  .vsDivider{
+    text-align:center; font-weight:900; font-size:12px; color:var(--ink-soft);
+    margin:2px 0; letter-spacing:2px;
+  }
+
+  #logBox{
+    background:rgba(255,255,255,0.6);
+    border-radius:14px;
+    padding:9px 14px;
+    margin:8px 0;
+    font-size:12.5px; font-weight:800; text-align:center;
+    min-height:18px;
+    flex-shrink:0;
+  }
+
+  #actionPanel{
+    display:flex; flex-direction:column; gap:8px; margin-top:auto; padding-top:6px;
+  }
+  .allyPicker{display:flex; justify-content:center; gap:10px;}
+  .allyChip{
+    width:46px;height:46px; border-radius:50%; background:#fff; box-shadow:var(--shadow);
+    border:3px solid transparent; display:flex; align-items:center; justify-content:center;
+    transition: transform .12s ease, border-color .12s ease; position:relative;
+  }
+  .allyChip svg{width:80%;height:80%;}
+  .allyChip.selected{border-color:var(--sun); transform:scale(1.12);}
+  .allyChip.usedSpecial::after{
+    content:'★'; position:absolute; top:-4px; right:-4px; font-size:11px; color:#bbb;
+  }
+  .allyChip.deadChip{opacity:0.25; filter:grayscale(1); pointer-events:none;}
+  .allyChip.reviveTargetable{opacity:1; filter:none; pointer-events:auto; border-color:#62c77a; box-shadow:0 0 0 3px rgba(98,199,122,.22), var(--shadow); animation:revivePulse 1s ease-in-out infinite;}
+  @keyframes revivePulse{0%,100%{transform:scale(1)}50%{transform:scale(1.08)}}
+
+  .actionBtns{display:flex; gap:8px;}
+  .actBtn{
+    flex:1; border:none; border-radius:14px; padding:11px 6px;
+    font-family:inherit; font-weight:900; font-size:12.5px; color:#fff;
+    background: linear-gradient(180deg, var(--coral), var(--coral-dark));
+    box-shadow: 0 6px 0 #b33d2f;
+    transition: all .1s ease;
+  }
+  .actBtn.special{background:linear-gradient(180deg,#8E6FE0,#6A4CC0); box-shadow:0 6px 0 #4a339c;}
+  .actBtn:disabled{background:#cfcfcf; box-shadow:0 6px 0 #a2a2a2; color:#eee;}
+  .actBtn:not(:disabled):active{transform:translateY(4px); box-shadow:0 2px 0 #b33d2f;}
+  .actBtn.special:not(:disabled):active{box-shadow:0 2px 0 #4a339c;}
+  .hint{text-align:center; font-size:11.5px; color:var(--ink-soft); font-weight:700; min-height:16px;}
+
+  /* ---------- Result screen ---------- */
+  #resultScreen{align-items:center; justify-content:center; text-align:center; padding:20px; position:relative; overflow:hidden;}
+  #resultScreen h2{font-size:28px; font-weight:900; margin:0 0 6px;}
+  #resultScreen p{color:var(--ink-soft); font-weight:700; margin:0 0 6px;}
+  #resultQuote{font-style:normal; font-size:13px; color:var(--ink); background:rgba(255,255,255,0.6); padding:8px 14px; border-radius:12px; margin-bottom:20px; font-weight:800;}
+  .resultIcon{font-size:60px; margin-bottom:6px; animation: idleBob 1.6s ease-in-out infinite;}
+  .rewardLine{font-size:14px; font-weight:900; color:var(--gold); margin-bottom:18px;}
+  .confetti{
+    position:absolute; top:-10px; width:8px; height:14px; border-radius:2px;
+    animation: fall linear forwards;
+  }
+  @keyframes fall{ to{ transform: translateY(120vh) rotate(360deg); opacity:0.9;} }
+
+  .resultBtnRow{display:flex; gap:10px; width:100%; max-width:320px;}
+  #updateOverlay{position:fixed;inset:0;z-index:9999;background:linear-gradient(180deg,#ffe8a8,#7fe3c6);display:flex;align-items:center;justify-content:center;padding:18px;}
+  #updateOverlay.hidden{display:none}
+  .updateCard{width:100%;max-width:460px;max-height:92vh;overflow:auto;background:#fffdf7;border-radius:26px;padding:18px;box-shadow:0 18px 45px rgba(30,20,10,.28);text-align:center}
+  .updateBadge{display:inline-block;background:#8e6fe0;color:#fff;border-radius:999px;padding:6px 12px;font-size:12px;font-weight:900}
+  .updateCard h2{margin:8px 0 4px;font-size:24px;font-weight:900}.updateSub{font-size:12px;color:#6b5f82;font-weight:800;margin-bottom:10px}
+  .interview{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:10px 0}.interviewBox{background:#f6f1ff;border-radius:18px;padding:8px;font-size:11px;font-weight:800;line-height:1.7}.interviewBox svg{width:92px;height:92px;display:block;margin:auto}
+  .interviewBox.orange{background:#fff3dc}.interviewQ{margin:8px 0;background:rgba(63,166,114,.12);border-radius:14px;padding:9px;font-size:11px;font-weight:800;line-height:1.8}
+  .updateContinue{margin-top:8px}
+</style>
+</head>
+<body>
+<div id="app">  <div id="updateOverlay">
+    <div class="updateCard">
+      <span class="updateBadge">✨ آپدیت جدید</span>
+      <h2>دو افسانه وارد باغ شدند!</h2>
+      <div class="updateSub">مصاحبه ویژه با خیار دانشمند و نارنگی پیر</div>
+      <div class="interview">
+        <div class="interviewBox">
+          <div id="updateCucumberArt"></div>
+          <b>🥒 خیار دانشمند</b><br>
+          «من در حال ساخت ماشین زمانم؛ می‌خواهم علمم را برای خدمت به نسل بشر و آینده‌ی باغ‌ها به کار بگیرم!»
+        </div>
+        <div class="interviewBox orange">
+          <div id="updateTangerineArt"></div>
+          <b>🍊 نارنگی پیر</b><br>
+          «سال‌ها تجربه به من یاد داده که قدرت واقعی فقط در جوانی نیست؛ خرد و اراده هم می‌توانند سرنوشت نبرد را عوض کنند.»
+        </div>
+      </div>
+      <div class="interviewQ">🎤 خبرنگار باغ: «اگر فقط یک جمله برای نسل آینده داشته باشید؟»<br>
+      🥒 خیار دانشمند: «آینده را فقط تماشا نکنید؛ آن را بسازید! ⏳»<br>
+      🍊 نارنگی پیر: «و هیچ‌وقت تجربه‌ی دیروز را برای ساختن فردا فراموش نکنید. 🍊»</div>
+      <button class="bigBtn updateContinue" id="updateContinueBtn">ادامه و ورود به بازی 🌱</button>
+    </div>
+  </div>
+
+
+  <!-- ================= LOGIN SCREEN ================= -->
+  <div class="screen active" id="loginScreen">
+    <div class="loginCard">
+      <div class="emoji">🌼</div>
+      <h2>نبرد گل‌ها</h2>
+      <p class="sub">وارد حسابت شو یا یه حساب جدید بساز</p>
+      <div class="field">
+        <label>اسم کاربری</label>
+        <input type="text" id="usernameInput" placeholder="مثلاً: باغبون_قهرمان" maxlength="18">
+      </div>
+      <div class="field">
+        <label>رمز عبور</label>
+        <input type="password" id="passwordInput" placeholder="حداقل ۸ کاراکتر" maxlength="64">
+      </div>
+      <div class="loginErr" id="loginErr"></div>
+      <button class="bigBtn" id="loginBtn">ورود به حساب</button>
+      <div class="loginNote" id="loginNote">اگر این نام کاربری قبلاً ثبت نشده باشد، حساب شما ساخته می‌شود. اطلاعات حساب روی همین مرورگر ذخیره می‌شود؛ رمز واقعی خود را وارد نکن 🙂</div>
+    </div>
+  </div>
+
+  <!-- ================= HOME SCREEN ================= -->
+  <div class="screen" id="homeScreen">
+    <div class="topbar">
+      <button class="iconBtn right" id="muteBtnHome">🔊</button>
+      <button class="iconBtn left" id="logoutBtn">🚪</button>
+      <h1>🌼 نبرد گل‌ها 🌼</h1>
+    </div>
+    <div class="homeHero">
+      <div class="avatarsPreview" id="homePreview"></div>
+      <h2 id="homeWelcome">خوش اومدی!</h2>
+      <div class="statsLine" id="homeStats"></div>
+    </div>
+    <div class="hud">🪙 <span id="homeCoins">0</span> سکه</div>
+    <div class="menuStack">
+      <button class="bigBtn" id="goBattleBtn">شروع نبرد ⚔️</button>
+      <button class="ghostBtn" id="goShopBtn">فروشگاه و ارتقا 🛒</button>
+    </div>
+  </div>
+
+  <!-- ================= SELECT SCREEN ================= -->
+  <div class="screen" id="selectScreen">
+    <div class="topbar">
+      <button class="iconBtn right" id="backFromSelect">🏠</button>
+      <h1>انتخاب تیم</h1>
+      <p>سه تا از گیاهانت رو انتخاب کن</p>
+    </div>
+    <div id="squadInfo">
+      <span>تیم من</span>
+      <div id="squadSlots"></div>
+    </div>
+    <div id="plantGrid"></div>
+    <button class="bigBtn fixedBtn" id="startBattleBtn" disabled>برو به نبرد ⚔️</button>
+  </div>
+
+  <!-- ================= SHOP SCREEN ================= -->
+  <div class="screen" id="shopScreen">
+    <div class="topbar">
+      <button class="iconBtn right" id="backFromShop">🏠</button>
+      <h1>فروشگاه 🛒</h1>
+      <p>با سکه، گل جدید باز کن یا گل‌هات رو ارتقا بده</p>
+    </div>
+    <div class="hud">🪙 <span id="shopCoins">0</span> سکه</div>
+    <div id="shopGrid"></div>
+  </div>
+
+  <!-- ================= BATTLE SCREEN ================= -->
+  <div class="screen" id="battleScreen">
+    <div class="topbar" style="padding-top:10px;">
+      <button class="iconBtn right" id="muteBtnBattle">🔊</button>
+      <h1 style="font-size:18px;">نبرد گل‌ها</h1>
+    </div>
+    <div class="row enemyRow" id="enemyRow"></div>
+    <div class="vsDivider">⚔️ در برابر ⚔️</div>
+    <div class="row playerRow" id="playerRow"></div>
+    <div id="logBox">نبرد شروع شد!</div>
+    <div id="actionPanel">
+      <div class="allyPicker" id="allyPicker"></div>
+      <div class="actionBtns">
+        <button class="actBtn" id="attackBtn" disabled>حمله عادی</button>
+        <button class="actBtn special" id="specialBtn" disabled>توانایی ویژه ✨</button>
+      </div>
+      <div class="hint" id="hintText">اول یکی از گل‌هات رو انتخاب کن</div>
+    </div>
+  </div>
+
+  <!-- ================= RESULT SCREEN ================= -->
+  <div class="screen" id="resultScreen">
+    <div class="resultIcon" id="resultIcon">🏆</div>
+    <h2 id="resultTitle">پیروزی!</h2>
+    <p id="resultSub">تیم گل‌های تو برنده شد</p>
+    <div id="resultQuote"></div>
+    <div class="rewardLine" id="rewardLine"></div>
+    <div class="resultBtnRow">
+      <button class="bigBtn" id="playAgainBtn">نبرد دوباره</button>
+      <button class="ghostBtn" id="resultHomeBtn">خانه 🏠</button>
+    </div>
+  </div>
+
+</div>
+
+<script>
+/* ============================================================
+   SOUND — tiny synthesized SFX (no external files needed)
+   ============================================================ */
+let audioCtx = null;
+let muted = false;
+function ensureAudio(){
+  if(!audioCtx){
+    try{ audioCtx = new (window.AudioContext||window.webkitAudioContext)(); }catch(e){ return null; }
+  }
+  if(audioCtx.state==='suspended'){ audioCtx.resume().catch(()=>{}); }
+  return audioCtx;
+}
+function beep(freq, duration, type='sine', vol=0.2, delay=0){
+  if(muted) return;
+  const ctx = ensureAudio();
+  if(!ctx) return;
+  try{
+    const t0 = ctx.currentTime+delay;
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = type;
+    osc.frequency.setValueAtTime(freq, t0);
+    gain.gain.setValueAtTime(vol, t0);
+    gain.gain.exponentialRampToValueAtTime(0.001, t0+duration);
+    osc.connect(gain).connect(ctx.destination);
+    osc.start(t0); osc.stop(t0+duration+0.03);
+  }catch(e){}
+}
+function sfxClick(){ beep(650,0.05,'square',0.07); }
+function sfxHit(){ beep(170,0.17,'square',0.17); beep(90,0.14,'square',0.11,0.03); }
+function sfxExplosion(){ beep(120,0.16,'sawtooth',0.18); beep(260,0.13,'square',0.16,0.08); beep(70,0.28,'sawtooth',0.16,0.15); }
+function sfxHeal(){ beep(520,0.12,'sine',0.14); beep(700,0.14,'sine',0.14,0.1); beep(900,0.16,'sine',0.14,0.2); }
+function sfxShield(){ beep(220,0.25,'triangle',0.16); }
+function sfxUnlock(){ [500,700,900,1200].forEach((f,i)=>beep(f,0.12,'sine',0.14,i*0.08)); }
+function sfxLevelUp(){ [440,554,659,880].forEach((f,i)=>beep(f,0.14,'triangle',0.15,i*0.07)); }
+function sfxVictory(){ [523,659,784,1046].forEach((f,i)=>beep(f,0.22,'triangle',0.18,i*0.15)); }
+function sfxDefeat(){ [400,340,260].forEach((f,i)=>beep(f,0.3,'sawtooth',0.14,i*0.2)); }
+function toggleMute(){
+  muted = !muted;
+  document.querySelectorAll('.iconBtn[id^="muteBtn"]').forEach(b=>b.textContent = muted?'🔇':'🔊');
+  if(!muted) ensureAudio();
+}
+document.getElementById('muteBtnHome').addEventListener('click', toggleMute);
+document.getElementById('muteBtnBattle').addEventListener('click', toggleMute);
+
+/* ============================================================
+   CHARACTER ART — original SVG "cute plant" avatars
+   ============================================================ */
+function svgWrap(inner){ return `<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">${inner}</svg>`; }
+
+const ART = {
+  emberRose: svgWrap(`
+    <g>
+      <path d="M50 20 C30 20 18 35 18 50 C18 68 33 82 50 82 C67 82 82 68 82 50 C82 35 70 20 50 20 Z" fill="#E8483F"/>
+      <path d="M50 28 C38 28 30 38 30 50 C30 62 39 72 50 72 C61 72 70 62 70 50 C70 38 62 28 50 28 Z" fill="#FF6E5A"/>
+      <path d="M50 40a8 8 0 100 16 8 8 0 000-16z" fill="#C43229"/>
+      <ellipse cx="41" cy="49" rx="4.2" ry="5.4" fill="#2C2140"/>
+      <ellipse cx="59" cy="49" rx="4.2" ry="5.4" fill="#2C2140"/>
+      <path d="M40 62 Q50 56 60 62" stroke="#2C2140" stroke-width="2.6" fill="none" stroke-linecap="round"/>
+      <path d="M28 78 Q35 90 50 92 Q65 90 72 78" fill="#3FA672"/>
+    </g>`),
+  sunnyBloom: svgWrap(`
+    <g>
+      <g fill="#FFC24B">
+        <circle cx="50" cy="16" r="11"/><circle cx="50" cy="84" r="11"/>
+        <circle cx="16" cy="50" r="11"/><circle cx="84" cy="50" r="11"/>
+        <circle cx="25" cy="25" r="10"/><circle cx="75" cy="25" r="10"/>
+        <circle cx="25" cy="75" r="10"/><circle cx="75" cy="75" r="10"/>
+      </g>
+      <circle cx="50" cy="50" r="24" fill="#8A5A2B"/>
+      <ellipse cx="42" cy="48" rx="3.6" ry="5" fill="#fff"/>
+      <ellipse cx="58" cy="48" rx="3.6" ry="5" fill="#fff"/>
+      <circle cx="42" cy="49" r="2" fill="#2C2140"/><circle cx="58" cy="49" r="2" fill="#2C2140"/>
+      <path d="M42 60 Q50 66 58 60" stroke="#fff" stroke-width="2.6" fill="none" stroke-linecap="round"/>
+    </g>`),
+  spikeCactus: svgWrap(`
+    <g>
+      <path d="M50 22a18 18 0 0118 18v22a18 18 0 01-36 0V40a18 18 0 0118-18z" fill="#4EA36B"/>
+      <path d="M28 46c-9 0-14 8-14 16s5 12 10 12" stroke="#4EA36B" stroke-width="10" fill="none" stroke-linecap="round"/>
+      <path d="M72 46c9 0 14 8 14 16s-5 12-10 12" stroke="#4EA36B" stroke-width="10" fill="none" stroke-linecap="round"/>
+      <g fill="#2C2140" opacity="0.85">
+        <rect x="34" y="30" width="2" height="6" rx="1"/><rect x="44" y="26" width="2" height="6" rx="1"/>
+        <rect x="56" y="26" width="2" height="6" rx="1"/><rect x="66" y="30" width="2" height="6" rx="1"/>
+      </g>
+      <rect x="30" y="52" width="16" height="8" rx="4" fill="#20303A"/>
+      <rect x="54" y="52" width="16" height="8" rx="4" fill="#20303A"/>
+      <path d="M40 74 Q50 70 60 74" stroke="#20303A" stroke-width="2.6" fill="none" stroke-linecap="round"/>
+    </g>`),
+  thunderLily: svgWrap(`
+    <g>
+      <path d="M50 14 C36 24 30 38 30 50 C30 66 39 80 50 80 C61 80 70 66 70 50 C70 38 64 24 50 14Z" fill="#9C6AE0"/>
+      <path d="M50 24 C40 32 36 42 36 50 C36 62 42 72 50 72 C58 72 64 62 64 50 C64 42 60 32 50 24Z" fill="#B98AF0"/>
+      <ellipse cx="42" cy="50" rx="3.8" ry="5" fill="#2C2140"/>
+      <ellipse cx="58" cy="50" rx="3.8" ry="5" fill="#2C2140"/>
+      <path d="M40 60 Q50 54 60 60" stroke="#2C2140" stroke-width="2.4" fill="none" stroke-linecap="round"/>
+      <path d="M53 8 L45 26 L53 26 L44 40 L58 22 L50 22 Z" fill="#FFD23F"/>
+    </g>`),
+  pinkShroom: svgWrap(`
+    <g>
+      <path d="M14 52 C14 30 30 18 50 18 C70 18 86 30 86 52 Z" fill="#F0708C"/>
+      <circle cx="32" cy="34" r="5.5" fill="#FFE1E9"/>
+      <circle cx="64" cy="30" r="4" fill="#FFE1E9"/>
+      <circle cx="50" cy="44" r="6" fill="#FFE1E9"/>
+      <rect x="34" y="52" width="32" height="30" rx="14" fill="#FFEADB"/>
+      <ellipse cx="43" cy="63" rx="3.4" ry="4.6" fill="#2C2140"/>
+      <ellipse cx="57" cy="63" rx="3.4" ry="4.6" fill="#2C2140"/>
+      <path d="M44 72 Q50 76 56 72" stroke="#2C2140" stroke-width="2.2" fill="none" stroke-linecap="round"/>
+    </g>`),
+  pineWarrior: svgWrap(`
+    <g>
+      <path d="M50 8 L58 24 L50 20 L46 30 L38 20 L34 8 L42 18 Z" fill="#3FA672"/>
+      <path d="M35 32 a15 15 0 0130 0 v28 a15 15 0 01-30 0 z" fill="#F3B633"/>
+      <g stroke="#C98A1B" stroke-width="1.6" opacity="0.7">
+        <path d="M35 38 L65 32"/><path d="M35 48 L65 42"/><path d="M35 58 L65 52"/>
+      </g>
+      <ellipse cx="43" cy="50" rx="3.4" ry="4.6" fill="#2C2140"/>
+      <ellipse cx="57" cy="50" rx="3.4" ry="4.6" fill="#2C2140"/>
+      <path d="M42 60 Q50 54 58 60" stroke="#2C2140" stroke-width="2.2" fill="none" stroke-linecap="round"/>
+    </g>`),
+  frostDaisy: svgWrap(`
+    <g fill="#EAF6FB">
+      <ellipse cx="50" cy="16" rx="9" ry="15"/><ellipse cx="50" cy="84" rx="9" ry="15"/>
+      <ellipse cx="16" cy="50" rx="15" ry="9"/><ellipse cx="84" cy="50" rx="15" ry="9"/>
+      <ellipse cx="27" cy="27" rx="9" ry="14" transform="rotate(-45 27 27)"/>
+      <ellipse cx="73" cy="27" rx="9" ry="14" transform="rotate(45 73 27)"/>
+      <ellipse cx="27" cy="73" rx="9" ry="14" transform="rotate(45 27 73)"/>
+      <ellipse cx="73" cy="73" rx="9" ry="14" transform="rotate(-45 73 73)"/>
+      <circle cx="50" cy="50" r="18" fill="#BFE7F2"/>
+      <rect x="30" y="44" width="12" height="7" rx="3.5" fill="#1E4E5C"/>
+      <rect x="58" y="44" width="12" height="7" rx="3.5" fill="#1E4E5C"/>
+      <path d="M42 60 Q50 64 58 60" stroke="#1E4E5C" stroke-width="2.4" fill="none" stroke-linecap="round"/>
+    </g>`),
+  vineShadow: svgWrap(`
+    <g>
+      <path d="M50 18 C30 26 20 42 24 58 C28 74 40 84 50 84 C60 84 72 74 76 58 C80 42 70 26 50 18 Z" fill="#4B2E6E"/>
+      <path d="M50 30 C38 36 32 46 34 58 C36 70 43 76 50 76 C57 76 64 70 66 58 C68 46 62 36 50 30 Z" fill="#6E4A98"/>
+      <path d="M35 46 Q50 34 65 46" stroke="#2C2140" stroke-width="3" fill="none" stroke-linecap="round"/>
+      <ellipse cx="42" cy="56" rx="3.6" ry="4.8" fill="#FFD23F"/>
+      <ellipse cx="58" cy="56" rx="3.6" ry="4.8" fill="#FFD23F"/>
+      <path d="M42 68 Q50 62 58 68" stroke="#2C2140" stroke-width="2.4" fill="none" stroke-linecap="round"/>
+    </g>`),
+  carnivorousFlower: svgWrap(`
+    <g>
+      <defs><radialGradient id="carnGlow" cx="50%" cy="35%"><stop offset="0" stop-color="#ffb06b"/><stop offset=".55" stop-color="#e94745"/><stop offset="1" stop-color="#8e2438"/></radialGradient><linearGradient id="carnLeaf" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#7bea7d"/><stop offset="1" stop-color="#197a49"/></linearGradient></defs>
+      <path d="M50 88 C43 72 40 62 42 51 C28 54 18 49 14 39 C28 35 40 38 48 45 C47 31 53 21 64 14 C69 27 66 39 57 48 C72 39 82 40 91 47 C81 58 69 59 57 54 C59 68 56 78 50 88Z" fill="url(#carnLeaf)"/>
+      <path d="M50 74 C29 74 13 63 12 48 C11 34 25 22 43 25 C50 13 61 13 68 25 C86 22 94 35 88 50 C82 66 67 74 50 74Z" fill="url(#carnGlow)" stroke="#6e1d32" stroke-width="2"/>
+      <path d="M25 48 Q50 69 75 48 Q67 64 50 65 Q33 64 25 48Z" fill="#45162a"/>
+      <path d="M31 51 L36 59 L41 52 L46 62 L51 52 L56 62 L61 52 L66 59 L71 51" fill="none" stroke="#ffe8c7" stroke-width="3" stroke-linecap="round"/>
+      <ellipse cx="39" cy="42" rx="5" ry="6" fill="#fff"/><ellipse cx="61" cy="42" rx="5" ry="6" fill="#fff"/>
+      <circle cx="40" cy="43" r="2.5" fill="#2c2140"/><circle cx="60" cy="43" r="2.5" fill="#2c2140"/>
+      <circle cx="18" cy="30" r="3" fill="#a8ff74"/><circle cx="83" cy="31" r="2.5" fill="#a8ff74"/>
+    </g>`),
+  angryPumpkin: svgWrap(`
+    <g>
+      <defs>
+        <radialGradient id="pumpGlow" cx="45%" cy="35%">
+          <stop offset="0" stop-color="#ffd45a"/><stop offset=".55" stop-color="#f59b25"/><stop offset="1" stop-color="#b94b18"/>
+        </radialGradient>
+        <linearGradient id="pumpLeaf" x1="0" y1="0" x2="1" y2="1">
+          <stop stop-color="#78e58a"/><stop offset="1" stop-color="#22754b"/>
+        </linearGradient>
+      </defs>
+      <path d="M50 18 Q48 8 57 5 Q62 12 58 22" fill="#6a4422"/>
+      <path d="M55 16 Q68 7 76 14 Q66 23 56 22" fill="url(#pumpLeaf)"/>
+      <path d="M50 18 C28 15 12 29 14 51 C16 72 30 85 50 86 C70 85 84 72 86 51 C88 29 72 15 50 18Z" fill="url(#pumpGlow)" stroke="#9b4519" stroke-width="2.5"/>
+      <path d="M38 20 C30 38 31 67 41 82" fill="none" stroke="#d66f20" stroke-width="3" opacity=".7"/>
+      <path d="M62 20 C70 38 69 67 59 82" fill="none" stroke="#d66f20" stroke-width="3" opacity=".7"/>
+      <path d="M21 48 L38 42 L33 58 Z M79 48 L62 42 L67 58 Z" fill="#3a1830"/>
+      <path d="M37 63 L46 59 L50 66 L55 59 L63 63 L57 72 L50 68 L43 72 Z" fill="#3a1830"/>
+      <circle cx="31" cy="34" r="3" fill="#fff2a8"/><circle cx="72" cy="32" r="2.5" fill="#fff2a8"/>
+    </g>`)
+,
+  cactusLat: svgWrap(`
+    <g>
+      <defs>
+        <linearGradient id="latBody" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#8bea5b"/><stop offset=".55" stop-color="#39a94b"/><stop offset="1" stop-color="#17643c"/></linearGradient>
+        <linearGradient id="latHat" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#ffd85a"/><stop offset=".55" stop-color="#e7a72f"/><stop offset="1" stop-color="#a95b1d"/></linearGradient>
+        <linearGradient id="latPoncho" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#e34d45"/><stop offset="1" stop-color="#8e2536"/></linearGradient>
+      </defs>
+      <!-- sombrero -->
+      <ellipse cx="50" cy="25" rx="39" ry="9" fill="#8a431e" stroke="#542718" stroke-width="2"/>
+      <path d="M25 25 Q27 5 50 6 Q73 5 75 25Z" fill="url(#latHat)" stroke="#6c351a" stroke-width="2"/>
+      <path d="M25 23 Q50 30 75 23 L72 29 Q50 36 28 29Z" fill="#d33437"/>
+      <path d="M39 11 Q50 8 61 11" stroke="#ffe8a1" stroke-width="2" fill="none"/>
+      <!-- cactus body -->
+      <path d="M39 80 L39 45 C39 35 45 30 50 30 C55 30 61 35 61 45 L61 80Z" fill="url(#latBody)" stroke="#145535" stroke-width="2"/>
+      <path d="M39 50 C27 45 18 48 18 59 L18 66 C18 70 23 72 27 69 L27 59 C27 56 32 56 39 60Z" fill="url(#latBody)" stroke="#145535" stroke-width="2"/>
+      <path d="M61 50 C73 45 82 48 82 59 L82 66 C82 70 77 72 73 69 L73 59 C73 56 68 56 61 60Z" fill="url(#latBody)" stroke="#145535" stroke-width="2"/>
+      <!-- eyes + mustache -->
+      <path d="M40 42 Q45 39 48 43" stroke="#291b17" stroke-width="3" fill="none" stroke-linecap="round"/><path d="M52 43 Q55 39 60 42" stroke="#291b17" stroke-width="3" fill="none" stroke-linecap="round"/>
+      <circle cx="45" cy="46" r="2" fill="#1b1512"/><circle cx="55" cy="46" r="2" fill="#1b1512"/>
+      <path d="M50 49 C45 46 40 49 39 53 C43 54 46 53 50 50 C54 53 57 54 61 53 C60 49 55 46 50 49Z" fill="#34201b"/>
+      <!-- poncho -->
+      <path d="M27 58 Q50 67 73 58 L69 82 Q50 90 31 82Z" fill="url(#latPoncho)" stroke="#681d2b" stroke-width="2"/>
+      <path d="M31 66 L69 66 M33 74 L67 74" stroke="#ffd35b" stroke-width="2" opacity=".8"/>
+      <!-- spikes/highlights -->
+      <path d="M34 40 l-5 -3 6 0 M66 40 l5 -3 -6 0 M34 55 l-5 -2 5 3 M66 55 l5 -2 -5 3" fill="#f7e5a0"/>
+      <!-- cigar -->
+      <path d="M59 52 L75 57" stroke="#5b321f" stroke-width="5" stroke-linecap="round"/><circle cx="76" cy="57" r="2.2" fill="#ff7b32"/>
+      <circle cx="80" cy="52" r="2" fill="#ddd" opacity=".7"/><circle cx="83" cy="48" r="1.5" fill="#ddd" opacity=".5"/>
+    </g>`) ,
+  doctorBanana: svgWrap(`
+    <g>
+      <defs>
+        <linearGradient id="docBananaBody" x1="0" y1="0" x2="1" y2="1">
+          <stop stop-color="#fff07a"/><stop offset=".5" stop-color="#ffd23f"/><stop offset="1" stop-color="#d99a19"/>
+        </linearGradient>
+        <linearGradient id="docCoat" x1="0" y1="0" x2="1" y2="1">
+          <stop stop-color="#ffffff"/><stop offset="1" stop-color="#dbe8ef"/>
+        </linearGradient>
+      </defs>
+      <path d="M35 25 C24 42 28 69 47 82 C61 92 77 83 78 67 C79 55 69 44 57 35 C49 29 42 25 35 25Z"
+            fill="url(#docBananaBody)" stroke="#b27a18" stroke-width="2.5"/>
+      <path d="M39 29 C45 36 53 43 62 48 C71 54 74 62 70 70" fill="none" stroke="#fff6a4" stroke-width="4" stroke-linecap="round" opacity=".8"/>
+      <path d="M32 25 Q30 17 37 13 Q43 16 42 23" fill="#6e4820" stroke="#4e351c" stroke-width="2"/>
+      <path d="M29 45 Q50 34 71 47 L67 80 Q50 88 33 80Z" fill="url(#docCoat)" stroke="#a9bac4" stroke-width="2"/>
+      <path d="M47 46 L47 76 M53 46 L53 76" stroke="#c4d3dc" stroke-width="1.5"/>
+      <path d="M50 52 L50 68 M43 60 L57 60" stroke="#e44848" stroke-width="4" stroke-linecap="round"/>
+      <path d="M38 43 Q43 38 48 43 M52 43 Q57 38 62 43" stroke="#3a2a22" stroke-width="3" fill="none" stroke-linecap="round"/>
+      <ellipse cx="43" cy="48" rx="3.5" ry="4.5" fill="#fff"/>
+      <ellipse cx="57" cy="48" rx="3.5" ry="4.5" fill="#fff"/>
+      <circle cx="44" cy="49" r="1.9" fill="#2c2140"/><circle cx="56" cy="49" r="1.9" fill="#2c2140"/>
+      <path d="M44 57 Q50 61 56 57" stroke="#2c2140" stroke-width="2.3" fill="none" stroke-linecap="round"/>
+      <circle cx="77" cy="29" r="10" fill="#fff" stroke="#b7c8d2" stroke-width="2"/>
+      <path d="M77 23 L77 35 M71 29 L83 29" stroke="#e44848" stroke-width="3" stroke-linecap="round"/>
+      <path d="M25 35 Q18 31 15 36 Q19 42 27 42" fill="#7fc96b" opacity=".9"/>
+    </g>`),
+  broccoliHero: svgWrap(`
+    <g>
+      <defs>
+        <radialGradient id="brocHead" cx="42%" cy="35%">
+          <stop offset="0" stop-color="#a8f06a"/><stop offset=".5" stop-color="#48b84d"/><stop offset="1" stop-color="#1c6937"/>
+        </radialGradient>
+        <linearGradient id="brocStem" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#d8f08c"/><stop offset="1" stop-color="#65a83c"/></linearGradient>
+        <linearGradient id="brocCape" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#f04d3e"/><stop offset="1" stop-color="#9f2333"/></linearGradient>
+      </defs>
+      <path d="M38 43 C31 33 32 22 41 18 C45 8 57 8 61 18 C72 18 77 29 70 38 C77 46 70 57 61 56 C57 65 43 65 39 56 C29 57 23 47 30 39 C31 37 34 38 38 43Z" fill="url(#brocHead)" stroke="#165b32" stroke-width="2.5"/>
+      <circle cx="42" cy="28" r="8" fill="#72d653" opacity=".7"/><circle cx="57" cy="23" r="9" fill="#83e35b" opacity=".7"/><circle cx="66" cy="35" r="7" fill="#61c94e" opacity=".8"/><circle cx="34" cy="41" r="7" fill="#55bd49" opacity=".8"/>
+      <path d="M43 51 C42 62 39 72 33 84 L67 84 C61 72 58 62 57 51Z" fill="url(#brocStem)" stroke="#4f8434" stroke-width="2"/>
+      <path d="M28 61 Q50 73 72 61 L67 85 Q50 92 33 85Z" fill="url(#brocCape)" stroke="#701f2b" stroke-width="2"/>
+      <path d="M33 69 L67 69 M35 77 L65 77" stroke="#ffd85a" stroke-width="2" opacity=".9"/>
+      <path d="M38 37 Q44 32 48 37 M52 37 Q57 32 63 37" stroke="#292018" stroke-width="3" fill="none" stroke-linecap="round"/>
+      <circle cx="44" cy="41" r="2.4" fill="#201914"/><circle cx="57" cy="41" r="2.4" fill="#201914"/>
+      <path d="M42 49 Q50 54 59 49" stroke="#2a1d17" stroke-width="2.8" fill="none" stroke-linecap="round"/>
+      <path d="M50 5 L50 18" stroke="#d9e7ec" stroke-width="3" stroke-linecap="round"/><path d="M44 11 L56 11" stroke="#d9e7ec" stroke-width="3" stroke-linecap="round"/>
+      <path d="M25 52 L16 47 L23 57 M75 52 L84 47 L77 57" fill="#e9f7a0" stroke="#5a8e39" stroke-width="1.5"/>
+      <circle cx="31" cy="25" r="2.2" fill="#e8ffae"/><circle cx="69" cy="26" r="2" fill="#e8ffae"/>
+    </g>`),
+  chameleon: svgWrap(`<g><defs><radialGradient id='cha'><stop stop-color='#b8ff72'/><stop offset='.55' stop-color='#4ecb75'/><stop offset='1' stop-color='#285c9b'/></radialGradient></defs><path d='M25 55 Q15 35 35 27 Q58 18 74 32 Q90 47 70 62 Q54 75 35 67Z' fill='url(#cha)' stroke='#163f4a' stroke-width='3'/><circle cx='48' cy='38' r='12' fill='#dfffa0'/><circle cx='52' cy='38' r='4' fill='#252525'/><path d='M70 38 Q88 25 91 42 Q82 48 71 48' fill='none' stroke='#4ecb75' stroke-width='9' stroke-linecap='round'/><path d='M35 62 Q50 72 66 62' fill='none' stroke='#eaffcf' stroke-width='3'/></g>`),
+  bloodRose: svgWrap(`<g><defs><radialGradient id='br'><stop stop-color='#ff7a86'/><stop offset='.6' stop-color='#c52b4c'/><stop offset='1' stop-color='#64152d'/></radialGradient></defs><path d='M50 47 C30 35 25 15 42 13 C49 12 52 20 50 25 C51 13 69 9 74 20 C79 33 65 42 56 48 C70 40 87 49 80 62 C73 76 57 68 50 57 C44 72 27 78 20 64 C13 50 32 43 50 47Z' fill='url(#br)' stroke='#52152c' stroke-width='3'/><path d='M50 54 L50 88' stroke='#2f8a49' stroke-width='7'/><path d='M50 76 Q35 66 28 75 Q38 87 50 82 M50 78 Q65 67 73 76 Q62 87 50 83' fill='#3fa65c'/><circle cx='40' cy='39' r='3' fill='#fff2d6'/><circle cx='60' cy='39' r='3' fill='#fff2d6'/></g>`),
+  tearOnion: svgWrap(`<g><defs><linearGradient id='on'><stop stop-color='#e8b6ff'/><stop offset='.5' stop-color='#a66be3'/><stop offset='1' stop-color='#633a9a'/></linearGradient></defs><path d='M50 12 Q72 25 75 53 Q73 79 50 88 Q27 79 25 53 Q28 25 50 12Z' fill='url(#on)' stroke='#4a2a78' stroke-width='3'/><path d='M38 25 Q50 43 50 78 M62 25 Q50 43 50 78' stroke='#f0d9ff' stroke-width='3' opacity='.6'/><circle cx='41' cy='48' r='5' fill='#fff'/><circle cx='59' cy='48' r='5' fill='#fff'/><circle cx='41' cy='49' r='2' fill='#333'/><circle cx='59' cy='49' r='2' fill='#333'/><path d='M42 65 Q50 70 58 65' stroke='#38234d' stroke-width='3' fill='none'/><path d='M30 76 Q20 84 25 92 M70 76 Q80 84 75 92' stroke='#63a95a' stroke-width='6' fill='none'/></g>`),
+  poisonMushroom: svgWrap(`<g><path d='M20 50 Q22 20 50 18 Q78 20 80 50Z' fill='#58c86b' stroke='#1d633c' stroke-width='3'/><circle cx='38' cy='34' r='6' fill='#efffa6'/><circle cx='60' cy='30' r='5' fill='#efffa6'/><circle cx='67' cy='43' r='4' fill='#efffa6'/><path d='M38 50 L38 84 Q50 90 62 84 L62 50' fill='#f2e3bd' stroke='#9c754d' stroke-width='3'/><circle cx='43' cy='62' r='3' fill='#333'/><circle cx='57' cy='62' r='3' fill='#333'/><path d='M43 73 Q50 78 57 73' stroke='#49362a' stroke-width='3' fill='none'/><text x='50' y='15' text-anchor='middle' font-size='12'>☠</text></g>`),
+  machineCorn: svgWrap(`<g><path d='M42 20 Q50 10 58 20 L72 75 Q50 91 28 75Z' fill='#ffd34e' stroke='#a86b19' stroke-width='3'/><g fill='#fff19a'><circle cx='39' cy='35' r='3'/><circle cx='51' cy='31' r='3'/><circle cx='63' cy='37' r='3'/><circle cx='43' cy='48' r='3'/><circle cx='55' cy='45' r='3'/><circle cx='66' cy='51' r='3'/></g><path d='M31 57 L18 48 L15 57 L30 65 M69 57 L82 48 L85 57 L70 65' stroke='#4e9d4d' stroke-width='6' fill='none'/><circle cx='43' cy='68' r='3' fill='#30241a'/><circle cx='57' cy='68' r='3' fill='#30241a'/><path d='M43 76 Q50 81 57 76' stroke='#30241a' stroke-width='2.5' fill='none'/></g>`),
+  angryTomato: svgWrap(`<g><radialGradient id='to'><stop stop-color='#ff7965'/><stop offset='1' stop-color='#b51f31'/></radialGradient><circle cx='50' cy='54' r='34' fill='url(#to)' stroke='#7e1827' stroke-width='3'/><path d='M50 23 L42 13 L50 17 L58 10 L57 23' fill='#4ca653' stroke='#27733c' stroke-width='2'/><path d='M32 43 L46 48 M68 43 L54 48' stroke='#fff0d0' stroke-width='4'/><circle cx='40' cy='49' r='3' fill='#241b18'/><circle cx='60' cy='49' r='3' fill='#241b18'/><path d='M37 68 Q50 58 63 68' stroke='#3a151a' stroke-width='4' fill='none'/></g>`),
+  carrotSniper: svgWrap(`<g><path d='M38 20 Q50 12 62 20 L55 82 Q50 90 45 82Z' fill='#f28b2f' stroke='#a94f18' stroke-width='3'/><path d='M42 21 Q31 5 28 14 Q30 25 42 31 M51 20 Q50 3 57 5 Q63 14 57 26 M60 24 Q70 8 75 15 Q72 27 61 32' fill='#4eaa52' stroke='#286c3c' stroke-width='2'/><circle cx='44' cy='45' r='4' fill='#fff'/><circle cx='56' cy='45' r='4' fill='#fff'/><circle cx='44' cy='46' r='2' fill='#222'/><circle cx='56' cy='46' r='2' fill='#222'/><path d='M43 60 Q50 64 57 60' stroke='#4a2415' stroke-width='3' fill='none'/><path d='M22 36 L78 36' stroke='#b7d7e8' stroke-width='3'/></g>`),
+  watermelonBomb: svgWrap(`<g><circle cx='50' cy='52' r='38' fill='#4eb85d' stroke='#195d38' stroke-width='3'/><path d='M22 32 Q50 5 78 32' fill='#ef5260' stroke='#a32c40' stroke-width='4'/><g fill='#222'><ellipse cx='39' cy='35' rx='2' ry='5'/><ellipse cx='51' cy='28' rx='2' ry='5'/><ellipse cx='63' cy='35' rx='2' ry='5'/></g><circle cx='42' cy='57' r='5' fill='#fff'/><circle cx='58' cy='57' r='5' fill='#fff'/><circle cx='43' cy='58' r='2' fill='#222'/><circle cx='57' cy='58' r='2' fill='#222'/><path d='M40 70 Q50 76 60 70' stroke='#19331f' stroke-width='3' fill='none'/><path d='M50 14 L50 5' stroke='#f7c84b' stroke-width='4'/></g>`),
+  armoredPotato: svgWrap(`<g><defs><radialGradient id='po'><stop stop-color='#dcb07a'/><stop offset='1' stop-color='#80522f'/></radialGradient></defs><path d='M25 35 Q30 15 50 18 Q70 15 75 35 L70 73 Q50 91 30 73Z' fill='url(#po)' stroke='#57351f' stroke-width='3'/><path d='M26 38 L74 38 M23 50 L77 50 M27 63 L73 63' stroke='#c7d4d9' stroke-width='5'/><circle cx='42' cy='48' r='4' fill='#fff'/><circle cx='58' cy='48' r='4' fill='#fff'/><circle cx='42' cy='49' r='2' fill='#222'/><circle cx='58' cy='49' r='2' fill='#222'/><path d='M42 64 Q50 69 58 64' stroke='#39251b' stroke-width='3' fill='none'/></g>`),
+  iceCactus: svgWrap(`<g><path d='M39 84 L39 42 C39 25 61 25 61 42 L61 84Z' fill='#9be8f5' stroke='#2b7f9b' stroke-width='3'/><path d='M39 54 C22 45 15 52 18 67 M61 54 C78 45 85 52 82 67' fill='none' stroke='#79d7eb' stroke-width='12' stroke-linecap='round'/><path d='M35 35 L30 29 M65 35 L70 29 M35 62 L29 60 M65 62 L71 60' stroke='#e9ffff' stroke-width='3'/><circle cx='44' cy='45' r='3' fill='#164b60'/><circle cx='56' cy='45' r='3' fill='#164b60'/><path d='M43 58 Q50 63 57 58' stroke='#164b60' stroke-width='3' fill='none'/></g>`),
+  sleepyFlower: svgWrap(`<g><path d='M50 48 C24 45 13 28 26 18 C37 10 48 22 50 35 C52 22 63 10 74 18 C87 28 76 45 50 48Z' fill='#b58be8' stroke='#603d8d' stroke-width='3'/><path d='M50 47 L50 86' stroke='#4c9b54' stroke-width='7'/><path d='M38 52 Q50 60 62 52' fill='#78bd59'/><path d='M37 38 Q42 42 47 38 M53 38 Q58 42 63 38' stroke='#30233b' stroke-width='3' fill='none'/><path d='M43 52 Q50 55 57 52' stroke='#30233b' stroke-width='3' fill='none'/><text x='76' y='20' font-size='16'>Z</text><text x='84' y='10' font-size='11'>z</text></g>`),
+  garlicGuard: svgWrap(`<g><path d='M50 15 Q69 23 70 48 Q70 73 50 88 Q30 73 30 48 Q31 23 50 15Z' fill='#f5f1dc' stroke='#aaa27c' stroke-width='3'/><path d='M50 16 L50 84 M35 32 Q50 47 65 32 M32 52 Q50 68 68 52' stroke='#d4ceb0' stroke-width='3' fill='none'/><circle cx='42' cy='48' r='4' fill='#fff'/><circle cx='58' cy='48' r='4' fill='#fff'/><circle cx='42' cy='49' r='2' fill='#333'/><circle cx='58' cy='49' r='2' fill='#333'/><path d='M43 62 Q50 67 57 62' stroke='#514a39' stroke-width='3' fill='none'/></g>`),
+  magicBean: svgWrap(`<g><defs><linearGradient id='mb' x1='0' y1='0' x2='1' y2='1'><stop stop-color='#8cf0a1'/><stop offset='1' stop-color='#247b57'/></linearGradient></defs><path d='M50 82 C20 70 18 38 39 26 C61 13 80 35 68 57 C62 69 55 78 50 82Z' fill='url(#mb)' stroke='#16553c' stroke-width='3'/><path d='M36 30 Q50 45 63 26' fill='none' stroke='#d5ffb1' stroke-width='4'/><circle cx='43' cy='47' r='4' fill='#fff'/><circle cx='57' cy='47' r='4' fill='#fff'/><circle cx='43' cy='48' r='2' fill='#222'/><circle cx='57' cy='48' r='2' fill='#222'/><path d='M43 62 Q50 68 57 62' stroke='#163f30' stroke-width='3' fill='none'/><path d='M20 88 Q50 70 80 88' stroke='#9fe36b' stroke-width='5' fill='none'/></g>`),
+  lifeBerry: svgWrap(`<g><circle cx='50' cy='53' r='32' fill='#e73c61' stroke='#8e1e3a' stroke-width='3'/><path d='M50 23 Q39 9 28 20 Q38 29 50 28 Q62 29 72 20 Q61 9 50 23Z' fill='#52ae56' stroke='#2d743d' stroke-width='2'/><g fill='#ffd9a1'><circle cx='38' cy='42' r='2'/><circle cx='50' cy='37' r='2'/><circle cx='62' cy='43' r='2'/><circle cx='43' cy='55' r='2'/><circle cx='57' cy='56' r='2'/></g><circle cx='42' cy='61' r='4' fill='#fff'/><circle cx='58' cy='61' r='4' fill='#fff'/><circle cx='42' cy='62' r='2' fill='#222'/><circle cx='58' cy='62' r='2' fill='#222'/><path d='M43 73 Q50 78 57 73' stroke='#541a2a' stroke-width='3' fill='none'/></g>`),
+  coconutWarrior: svgWrap(`<g><circle cx='50' cy='53' r='37' fill='#8d5a35' stroke='#4e2f1d' stroke-width='3'/><path d='M20 42 Q50 20 80 42' stroke='#c7894d' stroke-width='7' fill='none'/><circle cx='40' cy='50' r='5' fill='#fff'/><circle cx='60' cy='50' r='5' fill='#fff'/><circle cx='40' cy='51' r='2' fill='#222'/><circle cx='60' cy='51' r='2' fill='#222'/><path d='M39 68 Q50 75 61 68' stroke='#2b1b13' stroke-width='4' fill='none'/><path d='M29 73 L15 84 M71 73 L85 84' stroke='#4f9b4f' stroke-width='6'/><path d='M30 31 L20 17 M70 31 L80 17' stroke='#69b85a' stroke-width='6'/></g>`),
+  ancientTree: svgWrap(`<g><defs><radialGradient id='at'><stop stop-color='#a8e96c'/><stop offset='.6' stop-color='#4c9a4e'/><stop offset='1' stop-color='#234f36'/></radialGradient></defs><path d='M28 55 Q14 38 28 25 Q37 8 50 18 Q63 8 72 25 Q86 38 72 55 Q67 67 50 64 Q33 67 28 55Z' fill='url(#at)' stroke='#173d2a' stroke-width='3'/><path d='M43 57 L38 88 L62 88 L57 57Z' fill='#76502e' stroke='#49301d' stroke-width='3'/><circle cx='42' cy='39' r='4' fill='#fff'/><circle cx='58' cy='39' r='4' fill='#fff'/><circle cx='42' cy='40' r='2' fill='#222'/><circle cx='58' cy='40' r='2' fill='#222'/><path d='M42 51 Q50 56 58 51' stroke='#203421' stroke-width='3' fill='none'/><path d='M24 69 Q15 78 10 75 M76 69 Q85 78 90 75' stroke='#79512f' stroke-width='5'/></g>`),
+  pineappleBomb: svgWrap(`
+    <g>
+      <defs>
+        <linearGradient id="pineBombBody" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#ffd95a"/><stop offset=".48" stop-color="#f4ad32"/><stop offset="1" stop-color="#b96a18"/></linearGradient>
+        <linearGradient id="pineBombLeaf" x1="0" y1="1" x2="1" y2="0"><stop stop-color="#267844"/><stop offset="1" stop-color="#78d957"/></linearGradient>
+        <radialGradient id="pineBombGlow"><stop stop-color="#fff4a0"/><stop offset="1" stop-color="#ff8a24" stop-opacity="0"/></radialGradient>
+      </defs>
+      <circle cx="50" cy="51" r="43" fill="url(#pineBombGlow)" opacity=".55"/>
+      <path d="M50 29 C42 20 38 12 41 5 C47 8 50 13 51 19 C52 10 58 4 64 3 C65 12 61 20 57 27 C67 17 75 16 80 19 C77 28 69 33 59 34Z" fill="url(#pineBombLeaf)" stroke="#175b35" stroke-width="2"/>
+      <path d="M44 25 C34 18 28 12 29 6 C37 8 43 13 48 22" fill="#4da94e" stroke="#175b35" stroke-width="2"/>
+      <path d="M50 24 C30 24 18 39 20 58 C22 76 34 88 50 91 C66 88 78 76 80 58 C82 39 70 24 50 24Z" fill="url(#pineBombBody)" stroke="#9a5519" stroke-width="2.5"/>
+      <g stroke="#b66b1c" stroke-width="1.7" opacity=".9">
+        <path d="M27 38 L50 52 L73 38 M22 52 L50 68 L78 52 M25 67 L50 82 L75 67" fill="none"/>
+        <path d="M38 30 L30 46 M50 27 L42 48 M62 30 L55 49 M34 58 L27 75 M50 55 L43 79 M66 58 L58 79" fill="none"/>
+      </g>
+      <g fill="#ffe8a1"><path d="M30 42 l-7 -4 5 8z"/><path d="M70 42 l7 -4 -5 8z"/><path d="M28 63 l-7 -2 6 6z"/><path d="M72 63 l7 -2 -6 6z"/></g>
+      <path d="M31 48 Q40 43 47 48" stroke="#3a2315" stroke-width="3.5" fill="none" stroke-linecap="round"/>
+      <path d="M53 48 Q60 43 69 48" stroke="#3a2315" stroke-width="3.5" fill="none" stroke-linecap="round"/>
+      <ellipse cx="41" cy="53" rx="4" ry="5" fill="#fff"/><ellipse cx="59" cy="53" rx="4" ry="5" fill="#fff"/>
+      <circle cx="42" cy="54" r="2.1" fill="#292019"/><circle cx="58" cy="54" r="2.1" fill="#292019"/>
+      <path d="M39 66 Q50 72 61 66" stroke="#3a2315" stroke-width="3" fill="none" stroke-linecap="round"/>
+      <circle cx="34" cy="35" r="3" fill="#fff2a8" opacity=".9"/>
+    </g>`),
+  timeCucumber: svgWrap(`<g>
+    <defs>
+      <radialGradient id="tcBody" cx="40%" cy="28%"><stop stop-color="#eaff9a"/><stop offset=".55" stop-color="#79cf63"/><stop offset="1" stop-color="#2e7d4f"/></radialGradient>
+      <linearGradient id="tcCoat" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#ffffff"/><stop offset="1" stop-color="#d8e7ef"/></linearGradient>
+    </defs>
+    <path d="M50 13 C35 13 23 26 23 45 C23 63 34 76 50 80 C66 76 77 63 77 45 C77 26 65 13 50 13Z" fill="url(#tcBody)" stroke="#28623d" stroke-width="2.5"/>
+    <path d="M50 5 L50 16" stroke="#4c9b55" stroke-width="5" stroke-linecap="round"/>
+    <path d="M29 39 Q50 31 71 39 L67 80 Q50 91 33 80Z" fill="url(#tcCoat)" stroke="#aabfc9" stroke-width="2"/>
+    <path d="M50 42 L50 78" stroke="#b9cbd3" stroke-width="1.5"/>
+    <path d="M42 48 Q46 45 49 48 M51 48 Q55 45 59 48" stroke="#24352c" stroke-width="3" fill="none" stroke-linecap="round"/>
+    <circle cx="44" cy="53" r="5.5" fill="none" stroke="#273c45" stroke-width="2.5"/><circle cx="56" cy="53" r="5.5" fill="none" stroke="#273c45" stroke-width="2.5"/><path d="M49 53 L51 53" stroke="#273c45" stroke-width="2"/>
+    <path d="M44 63 Q50 67 56 63" stroke="#29402d" stroke-width="2.3" fill="none" stroke-linecap="round"/>
+    <circle cx="73" cy="27" r="9" fill="#eaf7ff" stroke="#a9bdc7" stroke-width="2"/>
+    <path d="M73 21 L73 33 M67 27 L79 27" stroke="#5b8bd8" stroke-width="2.5"/>
+    <path d="M28 65 Q18 61 14 68 Q22 76 31 72" fill="#4aa85d"/>
+    <path d="M69 65 Q79 61 84 68 Q76 76 67 72" fill="#4aa85d"/>
+  </g>`),
+  oldTangerine: svgWrap(`<g>
+    <defs><radialGradient id="otBody" cx="35%" cy="28%"><stop stop-color="#ffd66b"/><stop offset=".55" stop-color="#f39b28"/><stop offset="1" stop-color="#b95a19"/></radialGradient>
+      <linearGradient id="otRobe" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#8f5ec9"/><stop offset="1" stop-color="#49316f"/></linearGradient></defs>
+    <path d="M50 18 C31 18 20 31 20 50 C20 69 33 82 50 82 C67 82 80 69 80 50 C80 31 69 18 50 18Z" fill="url(#otBody)" stroke="#9d4f18" stroke-width="2.5"/>
+    <path d="M37 43 Q43 38 48 43 M52 43 Q57 38 63 43" stroke="#3a251c" stroke-width="3" fill="none" stroke-linecap="round"/>
+    <circle cx="43" cy="48" r="2" fill="#2b2020"/><circle cx="57" cy="48" r="2" fill="#2b2020"/>
+    <path d="M34 55 Q50 50 66 55 L62 69 Q50 78 38 69Z" fill="#fff" stroke="#d9d9d9" stroke-width="1.5"/>
+    <path d="M39 57 Q50 67 61 57 Q58 74 50 75 Q42 74 39 57Z" fill="#f8f8f2"/>
+    <path d="M32 31 Q39 18 50 22 Q61 18 68 31" fill="none" stroke="#f7f7f0" stroke-width="5" stroke-linecap="round"/>
+    <path d="M37 62 Q31 69 27 78 M63 62 Q69 69 73 78" stroke="#fff" stroke-width="3" stroke-linecap="round"/>
+    <path d="M47 73 Q50 78 53 73" fill="none" stroke="#e2e2dc" stroke-width="2"/>
+    <circle cx="66" cy="25" r="3" fill="#fff2ad"/><path d="M24 54 Q15 51 13 58 Q20 64 27 62" fill="#5da65a"/>
+  </g>`)
+};
+
+function setupUpdateOverlay(){
+  const overlay=document.getElementById('updateOverlay');
+  const cont=document.getElementById('updateContinueBtn');
+  document.getElementById('updateCucumberArt').innerHTML=ART.timeCucumber;
+  document.getElementById('updateTangerineArt').innerHTML=ART.oldTangerine;
+  cont.addEventListener('click',()=>{sfxClick();overlay.classList.add('hidden');});
+}
+setupUpdateOverlay();
+/* ============================================================
+   ROSTER + PROGRESSION DATA
+   ============================================================ */
+const ROSTER = [
+  {id:'emberRose',  name:'رز آتشین',      hp:100, atk:20, spd:7,  ability:'power', abilityName:'ضربه آتشین',
+    lines:{attack:['بسوز تو شعله من!','از این طرف فرار نداری!'], special:['وقت آتیش‌بازیه! 🔥'], lowhp:['یکم... داغه اینجا...']}},
+  {id:'sunnyBloom', name:'آفتابگردان',    hp:112, atk:14, spd:6,  ability:'heal',  abilityName:'نور شفابخش',
+    lines:{attack:['بگیر این تلألو رو!','نور خورشید طرف توئه!'], special:['بذار نورم بهت برسه ☀️'], lowhp:['کم‌کم دارم پژمرده می‌شم...']}},
+  {id:'spikeCactus',name:'کاکتوس سرکش',   hp:132, atk:13, spd:4,  ability:'shield',abilityName:'زره خاردار',
+    lines:{attack:['به خارام دست نزن!','این یکی درد داشت، نه؟'], special:['زره من رو بشکن اگه می‌تونی 🌵'], lowhp:['حتی من هم... ترک می‌خورم...']}},
+  {id:'thunderLily',name:'نیلوفر رعد',    hp:88,  atk:18, spd:10, ability:'double',abilityName:'ضربه دوقلو',
+    lines:{attack:['سریع‌تر از برقم!','جا خالی بده!'], special:['دو ضربه، یه ثانیه ⚡'], lowhp:['برق من داره... کم میاره...']}},
+  {id:'pinkShroom', name:'قارچ صورتی',    hp:92,  atk:12, spd:6,  ability:'heal',  abilityName:'هاگ شفابخش',
+    lines:{attack:['هاگ‌هام حواسشونه!','اینم یه هدیه‌ی کوچولو'], special:['بذار کمکتون کنم دوستان 🍄'], lowhp:['وای... سرم گیج می‌ره...']}},
+  {id:'pineWarrior',name:'آناناس جنگجو',  hp:105, atk:19, spd:6,  ability:'power', abilityName:'خار ویرانگر',
+    lines:{attack:['طعم پیروزی رو بچش!','یه جنگجوی واقعی عقب نمی‌کشه'], special:['خارهام آماده‌ست! 🍍'], lowhp:['پوستم داره... ترک برمی‌داره...']}},
+  {id:'frostDaisy', name:'گل یخی',        hp:98,  atk:14, spd:8,  ability:'shield',abilityName:'سپر یخی',
+    lines:{attack:['یخ‌زده باش!','سرده اینجا، نه؟'], special:['سپر یخی، فعال! ❄️'], lowhp:['دارم... آب می‌شم...']}},
+  {id:'vineShadow', name:'پیچک سایه',     hp:90,  atk:17, spd:9,  ability:'double',abilityName:'گزش دوگانه',
+    lines:{attack:['از سایه‌ها می‌زنم!','منو ندیدی، نه؟'], special:['دو گزش تو تاریکی 🌙'], lowhp:['نور... داره پیدام می‌کنه...']}},
+  {id:'carnivorousFlower', name:'گل گوشت‌خوار', hp:118, atk:16, spd:7, ability:'poison', abilityName:'نیش سمی',
+    lines:{attack:['دهنم فقط برای خندیدن نیست! 😈','نزدیک‌تر بیا... اگه جرأت داری!'], special:['یه گاز کوچولو... بعدش سم! ☠️🌿','سه نوبت، سه نفس... و سم من کارشو می‌کنه!'], lowhp:['سمم هنوز تو رگ‌هامه... تموم نشده!']}},
+  {id:'angryPumpkin', name:'گل کدویی', hp:126, atk:15, spd:6, ability:'burnAbility', abilityName:'خشم کدویی',
+    lines:{attack:['پوستم رو دست‌کم نگیر! 🎃','وقتشه عصبانی بشم!'], special:['خشم من، قدرتتو خاموش می‌کنه! 🔥🎃','یکی از توانایی‌هات... برای همیشه سوخت!'], lowhp:['دارم له می‌شم... ولی هنوز خشمگینم!']}},
+  {id:'cactusLat', name:'کاکتوس لات', hp:122, atk:16, spd:8, ability:'rageGuard', abilityName:'خشم لات',
+    lines:{attack:['آرِه رفیق، نوبت منه! 🤠🌵','یه شلیک... نه، یه ضربه کافی‌ـه!'], special:['¡خشم لات فعال شد! هرکی بهت بزنه، جوابشو می‌گیره! 🔥🌵','به خودت یا رفیقت دست بزن... پشیمون می‌شی! 🤠'], lowhp:['آخ! خارام شکست، ولی هنوز لاتم!']}},
+  {id:'pineappleBomb', name:'گل آناناس', hp:112, atk:17, spd:6, ability:'pineappleExplosion', abilityName:'خشم آناناس',
+    lines:{attack:['خارام رو امتحان نکن! 🍍','یه ضربه شیرین و دردناک! 😈🍍'], special:['وقت انفجاره... همه کنار برن! 💥🍍','با خشمم خودمو فدا می‌کنم! 🔥'], lowhp:['دیگه چیزی برای از دست دادن ندارم... 💥']}}
+  ,{id:'doctorBanana', name:'دکتر موز', hp:108, atk:14, spd:7, ability:'doctorBananaRevive', abilityName:'خشم احیاگر',
+    lines:{attack:['نبضتو چک کردم... حالا اینو بخور! 🍌🩺','نسخه‌م درد داره، ولی جواب می‌ده!'], special:['وقتشه یکی رو برگردونم! 🩺🍌','این بار با جون کامل برمی‌گردی! ✨'], lowhp:['دکتر هم بالاخره زخمی می‌شه...']}}
+  ,{id:'broccoliHero', name:'بروکلی قهرمان', hp:116, atk:15, spd:8, ability:'heroRage', abilityName:'خشم قهرمان',
+    lines:{attack:['قهرمان‌ها عقب نمی‌کشن! 🥦🦸','این ضربه برای تیممه!'], special:['خشم قهرمان فعال شد! 🥦🔥','حالا هر ضربه بهت، دو برابر درد داره! 💥'], lowhp:['قهرمان هم زخمی می‌شه... ولی تسلیم نه!']}}
+  ,{id:'chameleon',name:'آفتاب‌پرست',hp:124,atk:13,spd:8,ability:'chameleonGuard',abilityName:'استتار آفتابی',lines:{attack:['رنگم رو دیدی؟ پس دیر شده! 🦎🌈','من با باغ یکی می‌شم!'],special:['استتار فعال! ضربه‌هات گم می‌شن! 🌈🛡️'],lowhp:['رنگم... داره می‌پره...']}}
+  ,{id:'bloodRose',name:'رز خونی',hp:104,atk:18,spd:7,ability:'bloodThorns',abilityName:'خار خونین',lines:{attack:['هر خار من یه خاطره تلخه! 🌹🩸','گل منو بچین، دستت می‌مونه!'],special:['هر ضربه‌ای بزنی، خون پس می‌دی! 🩸🌹'],lowhp:['گلبرگ‌هام می‌ریزن... ولی خارها هنوز هستن!']}}
+  ,{id:'tearOnion',name:'پیاز اشک‌آور',hp:110,atk:12,spd:6,ability:'tearGas',abilityName:'اشک‌آور',lines:{attack:['چشماتو ببند! 😭🧅','گریه کن، تازه شروعشه!'],special:['حالا همه‌تون اشکتون درمیاد! 😭💨'],lowhp:['چشمام... خودمم دارم گریه می‌کنم...']}}
+  ,{id:'poisonMushroom',name:'قارچ سمی',hp:96,atk:14,spd:6,ability:'sporeCloud',abilityName:'ابر هاگ سمی',lines:{attack:['یه هاگ کوچولو... ☠️🍄','بوی مرگ رو حس کردی؟'],special:['ابر سمی آزاد شد! نفس نکش! ☠️'],lowhp:['هاگ‌هام... دارن تموم می‌شن...']}}
+  ,{id:'machineCorn',name:'ذرت مسلسل',hp:100,atk:16,spd:9,ability:'cornBarrage',abilityName:'رگبار ذرت',lines:{attack:['رگبار آماده‌ست! 🌽💥','ذرت رو دست‌کم نگیر!'],special:['سه شلیک! بدون مکث! 🌽🔥'],lowhp:['خشکم زده... مهماتم کمه!']}}
+  ,{id:'angryTomato',name:'گوجه عصبانی',hp:118,atk:15,spd:7,ability:'tomatoFury',abilityName:'خشم سرخ',lines:{attack:['قرمز دیدی؟ یعنی عصبانی‌ام! 🍅😡','له‌ت می‌کنم!'],special:['حالا دیگه واقعاً عصبانی شدم! 🔥🍅'],lowhp:['یه فشار دیگه... منفجر می‌شم!']}}
+  ,{id:'carrotSniper',name:'هویج تک‌تیرانداز',hp:88,atk:20,spd:10,ability:'carrotShot',abilityName:'شلیک دقیق',lines:{attack:['یک هدف، یک شلیک. 🥕🎯','حتی پلک هم نزن!'],special:['هدفت قفل شد... تمام! 🎯'],lowhp:['نشونه‌گیری سخت شده...']}}
+  ,{id:'watermelonBomb',name:'هندوانه بمبی',hp:130,atk:14,spd:5,ability:'watermelonBlast',abilityName:'انفجار هندوانه',lines:{attack:['یه قاچ برای تو! 🍉💥','این یکی شیرین نیست!'],special:['همه کنار برن! منفجر می‌شم! 💥🍉'],lowhp:['ترک‌هام زیاد شدن...']}}
+  ,{id:'armoredPotato',name:'سیب‌زمینی زرهی',hp:145,atk:11,spd:4,ability:'potatoArmor',abilityName:'زره سیب‌زمینی',lines:{attack:['از زره من رد شو اگه می‌تونی! 🥔🛡️'],special:['قلعه سیب‌زمینی فعال شد! 🥔🛡️'],lowhp:['زره‌م ترک برداشت...']}}
+  ,{id:'iceCactus',name:'کاکتوس یخی',hp:112,atk:15,spd:7,ability:'iceFreeze',abilityName:'یخ‌زدگی',lines:{attack:['سردت شد؟ هنوز هیچی نیست! ❄️🌵'],special:['یخ بزن! یک قدم هم برندار! ❄️'],lowhp:['یخم داره آب می‌شه...']}}
+  ,{id:'sleepyFlower',name:'گل خواب‌آور',hp:102,atk:13,spd:8,ability:'deepSleep',abilityName:'خواب عمیق',lines:{attack:['چشماتو ببند... 😴🌸'],special:['وقت خوابه... خواب عمیق! 😴💤'],lowhp:['خودم هم خوابم میاد...']}}
+  ,{id:'garlicGuard',name:'سیر محافظ',hp:120,atk:12,spd:5,ability:'garlicShield',abilityName:'محافظت سیر',lines:{attack:['بوی من یعنی خطر! 🧄'],special:['همه پشت سپر من! 🧄🛡️'],lowhp:['سپر باغ... داره می‌شکنه...']}}
+  ,{id:'magicBean',name:'لوبیای جادویی',hp:92,atk:16,spd:9,ability:'magicGrowth',abilityName:'رشد جادویی',lines:{attack:['یک لوبیا، هزار راز! 🫘✨'],special:['رشد کن... دوباره! 🌱✨'],lowhp:['جادوم هنوز یه فرصت داره...']}}
+  ,{id:'lifeBerry',name:'توت‌فرنگی دزد',hp:106,atk:15,spd:8,ability:'berryDrain',abilityName:'مکیدن جان',lines:{attack:['جونت... مال منه! 🍓😈'],special:['یه جرعه از جونت می‌گیرم! 🍓🩸'],lowhp:['یه کم جون لازم دارم...']}}
+  ,{id:'coconutWarrior',name:'نارگیل جنگی',hp:134,atk:17,spd:5,ability:'coconutSmash',abilityName:'ضربه نارگیلی',lines:{attack:['صدای ترک خوردنت رو می‌شنوم! 🥥💥'],special:['نارگیل جنگی وارد می‌شه! 🥥⚔️'],lowhp:['پوستم سخته... ولی شکست‌ناپذیر نیستم!']}}
+  ,{id:'ancientTree',name:'درخت باستانی',hp:150,atk:12,spd:3,ability:'ancientRevive',abilityName:'ریشه‌های باستانی',lines:{attack:['هزار سال ایستادم... تو هم ایستادی؟ 🌳'],special:['ریشه‌ها، مردگان باغ را بازگردانید! 🌳✨'],lowhp:['زمان... حتی من را هم فرسوده می‌کند...']}},
+  {id:'timeCucumber',name:'خیار دانشمند',hp:125,atk:11,spd:8,ability:'timeShift',abilityName:'ماشین زمان',
+    lines:{attack:['زمان را نمی‌توان متوقف کرد... اما می‌توان آن را مهندسی کرد! 🥒🔬','برای آینده بشر، این آزمایش را کامل می‌کنم! ⏳'],special:['ماشین زمان آماده است؛ هر بار، اثر زمان عمیق‌تر می‌شود! ⏳⚙️','من برای خدمت به نسل‌های آینده اینجا هستم! 🥒🧪'],lowhp:['زمان کم است... اما آینده هنوز به من نیاز دارد! ⏳🥒']}},
+  {id:'oldTangerine',name:'نارنگی پیر',hp:145,atk:12,spd:5,ability:'elderPotion',abilityName:'معجون جاودانگی',
+    lines:{attack:['سال‌ها تجربه پشت این ضربه است، جوان! 🍊👴','پیری ضعف نیست؛ گنجینه‌ای از تجربه است. 🍊'],special:['یک جرعه از معجون... و هنوز چیزهای زیادی برای یاد دادن دارم! 🧪🍊','حالا وقت خشم پیر باغ است... جان‌ها جابه‌جا می‌شوند! ⚡🍊'],lowhp:['موهایم سفید شده، اما اراده‌ام هنوز جوان است... 👴🍊']}}
+];
+// یارهای قابل احیا توسط دکتر موز (به‌جز خود دکتر موز)
+const MALE_PLANTS = new Set(['spikeCactus','pineWarrior','vineShadow','carnivorousFlower','angryPumpkin','cactusLat','pineappleBomb','doctorBanana','broccoliHero']);
+function isMalePlant(f){ return !!f && MALE_PLANTS.has(f.id); }
+function reviveCandidates(team){ return team.filter(f=>(f.curHp<=0 || f.alive===false) && f.id!=='doctorBanana'); }
+const STARTER_UNLOCKED = ['emberRose','sunnyBloom','spikeCactus','thunderLily'];
+const LOCK_COST = {pinkShroom:250, pineWarrior:250, frostDaisy:250, vineShadow:250, carnivorousFlower:250, angryPumpkin:250, cactusLat:250, pineappleBomb:250, doctorBanana:250, broccoliHero:250, chameleon:250,bloodRose:250,tearOnion:250,poisonMushroom:250,machineCorn:250,angryTomato:250,carrotSniper:250,watermelonBomb:250,armoredPotato:250,iceCactus:250,sleepyFlower:250,garlicGuard:250,magicBean:250,lifeBerry:250,coconutWarrior:250,ancientTree:250,timeCucumber:3000,oldTangerine:3000};
+const MAX_LEVEL = 5;
+function upgradeCost(level){ return level*22; }
+function statsForLevel(base, level){
+  return {
+    hp: base.hp + (level-1)*9,
+    atk: base.atk + (level-1)*3
+  };
+}
+
+const VICTORY_LINES = ['ما پیروزیم! 🌸','باغ ما همیشه می‌بره!','نبرد خوبی بود، دوباره بیاید!'];
+const DEFEAT_LINES = ['این‌بار نه... ولی باز می‌کاریم و می‌جنگیم','باشه، دفعه بعد قوی‌تر برمی‌گردیم','هوم، باید بیشتر تمرین کنیم...'];
+
+/* ============================================================
+   STORAGE — account persistence
+   ============================================================ */
+async function hashPassword(password){
+  const data = new TextEncoder().encode(password);
+  const digest = await crypto.subtle.digest('SHA-256', data);
+  return [...new Uint8Array(digest)].map(x=>x.toString(16).padStart(2,'0')).join('');
+}
+function newAccount(passwordHash){
+  const levels = {};
+  ROSTER.forEach(p=>levels[p.id]=1);
+  return {
+    passwordHash, coins:6000, unlocked:[...STARTER_UNLOCKED],
+    levels, wins:0, losses:0, createdAt:Date.now()
+  };
+}
+async function getAccount(username){
+  const key = 'nebard-golha:v2:account:' + username.trim().toLowerCase();
+  try{
+    const raw = localStorage.getItem(key);
+    if(raw){
+      const data = JSON.parse(raw);
+      if(data && typeof data === 'object') return data;
+    }
+  }catch(e){ console.warn('localStorage get failed', e); }
+  return null;
+}
+async function saveAccount(username, data){
+  const key = 'nebard-golha:v2:account:' + username.trim().toLowerCase();
+  try{
+    const raw = JSON.stringify(data);
+    localStorage.setItem(key, raw);
+    return localStorage.getItem(key) === raw;
+  }catch(e){
+    console.warn('localStorage save failed', e);
+    return false;
+  }
+}
+
+/* ============================================================
+   STATE
+   ============================================================ */
+let currentUser = null;
+let account = null;
+let selectedIds = [];
+let battle = null;
+
+const screens = {
+  login: document.getElementById('loginScreen'),
+  home: document.getElementById('homeScreen'),
+  select: document.getElementById('selectScreen'),
+  shop: document.getElementById('shopScreen'),
+  battle: document.getElementById('battleScreen'),
+  result: document.getElementById('resultScreen'),
+};
+function showScreen(key){
+  Object.values(screens).forEach(s=>s.classList.remove('active'));
+  screens[key].classList.add('active');
+}
+
+/* ---------- Login ---------- */
+const usernameInput = document.getElementById('usernameInput');
+const passwordInput = document.getElementById('passwordInput');
+const loginErr = document.getElementById('loginErr');
+const loginNote = document.getElementById('loginNote');
+const loginBtn = document.getElementById('loginBtn');
+
+loginBtn.addEventListener('click', handleLogin);
+passwordInput.addEventListener('keydown', e=>{ if(e.key==='Enter') handleLogin(); });
+
+async function handleLogin(){
+  sfxClick();
+  const uname = usernameInput.value.trim();
+  const pass = passwordInput.value;
+  loginErr.textContent = '';
+  if(uname.length<2){ loginErr.textContent='نام کاربری باید حداقل ۲ کاراکتر باشد'; return; }
+  if(pass.length<8){ loginErr.textContent='رمز عبور باید حداقل ۸ کاراکتر باشد'; return; }
+
+  loginBtn.disabled = true;
+  loginBtn.textContent = 'در حال بررسی...';
+
+  try{
+    const passHash = await hashPassword(pass);
+    const existing = await getAccount(uname);
+
+    if(existing){
+      // Vault-style authentication: compare a SHA-256 password hash.
+      // Migrate older game accounts that still contain a plaintext password.
+      if(existing.passwordHash){
+        if(existing.passwordHash !== passHash){
+          loginErr.textContent = 'رمز عبور اشتباه است';
+          loginBtn.disabled = false; loginBtn.textContent = 'ورود به حساب';
+          return;
+        }
+      }else if(existing.password){
+        if(existing.password !== pass){
+          loginErr.textContent = 'رمز عبور اشتباه است';
+          loginBtn.disabled = false; loginBtn.textContent = 'ورود به حساب';
+          return;
+        }
+        existing.passwordHash = passHash;
+        delete existing.password;
+      }else{
+        loginErr.textContent = 'اطلاعات حساب ناقص است';
+        loginBtn.disabled = false; loginBtn.textContent = 'ورود به حساب';
+        return;
+      }
+
+      account = existing;
+      // Upgrade older accounts safely with any newly added plants.
+      account.levels = account.levels || {};
+      ROSTER.forEach(p=>{ if(!account.levels[p.id]) account.levels[p.id]=1; });
+      account.unlocked = Array.isArray(account.unlocked) ? account.unlocked : [...STARTER_UNLOCKED];
+      account.wins = Number(account.wins)||0;
+      account.losses = Number(account.losses)||0;
+      account.coins = 6000;
+      await saveAccount(uname, account);
+      loginNote.textContent = 'حساب شما پیدا شد؛ اطلاعات پیشرفت بازی از همین مرورگر بازیابی شد.';
+    }else{
+      // Same behavior as MEHRSAM VAULT: first login with a new username creates the account.
+      account = newAccount(passHash);
+      const saved = await saveAccount(uname, account);
+      if(!saved) throw new Error('account-save-failed');
+      loginNote.textContent = 'حساب جدید ساخته شد و اطلاعات آن روی همین مرورگر ذخیره شد.';
+    }
+
+    currentUser = uname;
+    loginBtn.disabled = false; loginBtn.textContent = 'ورود به حساب';
+    enterHome();
+  }catch(err){
+    console.error(err);
+    loginErr.textContent = 'ذخیره یا بررسی حساب انجام نشد؛ دوباره تلاش کن';
+    loginBtn.disabled = false; loginBtn.textContent = 'ورود به حساب';
+  }
+}
+
+document.getElementById('logoutBtn').addEventListener('click', ()=>{
+  sfxClick();
+  currentUser = null; account = null; selectedIds = [];
+  usernameInput.value=''; passwordInput.value=''; loginErr.textContent='';
+  showScreen('login');
+});
+
+/* ---------- Home ---------- */
+function enterHome(){
+  showScreen('home');
+  document.getElementById('homeWelcome').textContent = `سلام ${currentUser}! 👋`;
+  document.getElementById('homeStats').textContent = `${account.wins} برد   •   ${account.losses} باخت`;
+  document.getElementById('homeCoins').textContent = account.coins;
+  const preview = document.getElementById('homePreview');
+  preview.innerHTML = account.unlocked.slice(0,4).map(id=>ART[id]).join('');
+}
+document.getElementById('goBattleBtn').addEventListener('click', ()=>{
+  sfxClick();
+  selectedIds = [];
+  renderGrid(); renderSquadSlots();
+  showScreen('select');
+});
+document.getElementById('goShopBtn').addEventListener('click', ()=>{
+  sfxClick();
+  renderShop();
+  showScreen('shop');
+});
+document.getElementById('backFromSelect').addEventListener('click', ()=>{ sfxClick(); enterHome(); });
+document.getElementById('backFromShop').addEventListener('click', ()=>{ sfxClick(); enterHome(); });
+document.getElementById('resultHomeBtn').addEventListener('click', ()=>{ sfxClick(); enterHome(); });
+
+/* ---------- Selection grid (only unlocked plants) ---------- */
+const plantGrid = document.getElementById('plantGrid');
+const squadSlots = document.getElementById('squadSlots');
+const startBattleBtn = document.getElementById('startBattleBtn');
+
+function renderGrid(){
+  plantGrid.innerHTML = '';
+  ROSTER.filter(p=>account.unlocked.includes(p.id)).forEach(p=>{
+    const lv = account.levels[p.id]||1;
+    const eff = statsForLevel(p, lv);
+    const card = document.createElement('div');
+    card.className = 'plantCard' + (selectedIds.includes(p.id) ? ' selected':'');
+    card.innerHTML = `
+      <div class="checkBadge">✓</div>
+      <div class="avatarWrap">${ART[p.id]}<span class="lvBadge">Lv${lv}</span></div>
+      <div class="pname">${p.name}</div>
+      <div class="statRow">
+        <span>❤️ ${eff.hp}</span>
+        <span>⚔️ ${eff.atk}</span>
+        <span>💨 ${p.spd}</span>
+      </div>`;
+    card.addEventListener('click', ()=>toggleSelect(p.id));
+    plantGrid.appendChild(card);
+  });
+}
+function toggleSelect(id){
+  sfxClick();
+  const idx = selectedIds.indexOf(id);
+  if(idx>-1){ selectedIds.splice(idx,1); }
+  else{
+    if(selectedIds.length>=3) return;
+    selectedIds.push(id);
+  }
+  renderGrid();
+  renderSquadSlots();
+}
+function renderSquadSlots(){
+  squadSlots.innerHTML = '';
+  for(let i=0;i<3;i++){
+    const slot = document.createElement('div');
+    const id = selectedIds[i];
+    slot.className = 'slot' + (id? ' filled':'');
+    if(id) slot.innerHTML = ART[id];
+    squadSlots.appendChild(slot);
+  }
+  startBattleBtn.disabled = selectedIds.length!==3;
+}
+startBattleBtn.addEventListener('click', ()=>{
+  if(selectedIds.length!==3) return;
+  sfxClick();
+  startBattle();
+});
+
+/* ---------- Shop ---------- */
+function renderShop(){
+  document.getElementById('shopCoins').textContent = account.coins;
+  const grid = document.getElementById('shopGrid');
+  grid.innerHTML = '';
+  ROSTER.forEach(p=>{
+    const isUnlocked = account.unlocked.includes(p.id);
+    const card = document.createElement('div');
+    card.className = 'plantCard' + (isUnlocked? '' : ' lockedCard');
+    if(isUnlocked){
+      const lv = account.levels[p.id]||1;
+      const eff = statsForLevel(p, lv);
+      const maxed = lv>=MAX_LEVEL;
+      const cost = upgradeCost(lv);
+      card.innerHTML = `
+        <div class="avatarWrap">${ART[p.id]}<span class="lvBadge">Lv${lv}</span></div>
+        <div class="pname">${p.name}</div>
+        <div class="statRow"><span>❤️ ${eff.hp}</span><span>⚔️ ${eff.atk}</span></div>
+        <button class="shopBtnSm" ${maxed||account.coins<cost?'disabled':''} data-action="upgrade" data-id="${p.id}">
+          ${maxed? 'حداکثر سطح ✔️' : `ارتقا (${cost} 🪙)`}
+        </button>`;
+    } else {
+      const cost = LOCK_COST[p.id];
+      card.innerHTML = `
+        <div class="avatarWrap">${ART[p.id]}<div class="lockOverlay">🔒</div></div>
+        <div class="pname">${p.name}</div>
+        <div class="statRow"><span>❤️ ${p.hp}</span><span>⚔️ ${p.atk}</span></div>
+        <button class="shopBtnSm unlockBtn" ${account.coins<cost?'disabled':''} data-action="unlock" data-id="${p.id}">
+          باز کن (${cost} 🪙)
+        </button>`;
+    }
+    grid.appendChild(card);
+  });
+  grid.querySelectorAll('button[data-action]').forEach(btn=>{
+    btn.addEventListener('click', onShopAction);
+  });
+}
+async function onShopAction(e){
+  const id = e.currentTarget.dataset.id;
+  const action = e.currentTarget.dataset.action;
+  if(action==='unlock'){
+    const cost = LOCK_COST[id];
+    if(account.coins<cost) return;
+    account.coins -= cost;
+    account.unlocked.push(id);
+    sfxUnlock();
+  } else if(action==='upgrade'){
+    const lv = account.levels[id]||1;
+    if(lv>=MAX_LEVEL) return;
+    const cost = upgradeCost(lv);
+    if(account.coins<cost) return;
+    account.coins -= cost;
+    account.levels[id] = lv+1;
+    sfxLevelUp();
+  }
+  await saveAccount(currentUser, account);
+  renderShop();
+}
+
+/* ============================================================
+   BATTLE LOGIC
+   ============================================================ */
+function cloneFighter(base, teamTag, level){
+  const eff = statsForLevel(base, level);
+  return {
+    ...base,
+    level,
+    maxHp: eff.hp,
+    curHp: eff.hp,
+    atk: eff.atk,
+    team: teamTag,
+    alive:true,
+    shielded:false,
+    poisonedTurns:0,
+    abilityDisabled:false,
+    rageGuard:false,
+    heroRage:false,
+    thornCounter:0, skipTurns:0, damageReduction:0, atkBuff:1,
+    usedSpecial:false,
+    timeMark:0, timeMarkDamage:0, rageUsed:false,
+    saidLowHp:false
+  };
+}
+function pickEnemyTeam(){
+  const pool = [...ROSTER];
+  const picks = [];
+  while(picks.length<3 && pool.length){
+    const i = Math.floor(Math.random()*pool.length);
+    picks.push(pool.splice(i,1)[0]);
+  }
+  return picks;
+}
+function startBattle(){
+  const playerBase = selectedIds.map(id=>ROSTER.find(r=>r.id===id));
+  const enemyBase = pickEnemyTeam();
+  const enemyLevel = Math.min(MAX_LEVEL, 1+Math.floor(account.wins/3));
+  battle = {
+    player: playerBase.map(p=>cloneFighter(p,'player', account.levels[p.id]||1)),
+    enemy: enemyBase.map(p=>cloneFighter(p,'enemy', enemyLevel)),
+    chosenAttacker:null, chosenAction:null, locked:false
+  };
+  showScreen('battle');
+  renderBattle();
+  setLog('نبرد شروع شد! یکی از گل‌هات رو انتخاب کن.');
+}
+function setLog(msg){ document.getElementById('logBox').textContent = msg; }
+function fighterEl(f){ return document.querySelector(`[data-uid="${f.uid}"]`); }
+
+function renderBattle(){
+  battle.enemy.forEach((f,i)=>f.uid = 'e'+i);
+  battle.player.forEach((f,i)=>f.uid = 'p'+i);
+  const enemyRow = document.getElementById('enemyRow');
+  const playerRow = document.getElementById('playerRow');
+  enemyRow.innerHTML = ''; playerRow.innerHTML = '';
+  battle.enemy.forEach(f=> enemyRow.appendChild(buildFighterCard(f)) );
+  battle.player.forEach(f=> playerRow.appendChild(buildFighterCard(f)) );
+  renderAllyPicker();
+  updateActionButtons();
+}
+function buildFighterCard(f){
+  const div = document.createElement('div');
+  div.className = 'fighter' + (f.curHp<=0?' dead':'') + (f.poisonedTurns>0?' poisoned':'') + (f.rageGuard?' rageGuarded':'') + (f.heroRage?' heroRaged':'');
+  div.dataset.uid = f.uid;
+  div.innerHTML = `
+    <div class="avatarBox">${ART[f.id]}${f.poisonedTurns>0?`<span class="poisonBadge">☠️ ${f.poisonedTurns}</span>`:''}</div>
+    <div class="nameTag">${f.name} Lv${f.level}${f.shielded?' 🛡️':''}${f.abilityDisabled?' 🔥':''}${f.rageGuard?' 🤠🌵':''}${f.heroRage?' 🥦🔥':''}</div>
+    <div class="hpWrap"><div class="hpFill${f.curHp/f.maxHp<0.3?' low':''}" style="width:${Math.max(0,f.curHp/f.maxHp*100)}%"></div></div>
+  `;
+  if(f.team==='enemy'){ div.addEventListener('click', ()=> onEnemyClick(f)); }
+  return div;
+}
+function renderAllyPicker(){
+  const wrap = document.getElementById('allyPicker');
+  wrap.innerHTML = '';
+  battle.player.forEach(f=>{
+    const chip = document.createElement('div');
+    chip.className = 'allyChip'
+      + (battle.chosenAttacker===f ? ' selected':'')
+      + ((battle.chosenAction==='special' && battle.chosenAttacker && (battle.chosenAttacker.ability==='rageGuard' || (battle.chosenAttacker.ability==='elderPotion' && battle.chosenAttacker.usedSpecial)) && f.curHp>0 && f!==battle.chosenAttacker) ? ' targetable':'')
+      + ((battle.chosenAction==='special' && battle.chosenAttacker && battle.chosenAttacker.ability==='doctorBananaRevive' && (f.curHp<=0 || f.alive===false) && f.id!=='doctorBanana') ? ' reviveTargetable':'')
+      + (f.usedSpecial ? ' usedSpecial':'')
+      + ((f.curHp<=0 || f.alive===false) && !(battle.chosenAction==='special' && battle.chosenAttacker && battle.chosenAttacker.ability==='doctorBananaRevive' && f.id!=='doctorBanana') ? ' deadChip':'');
+    chip.innerHTML = ART[f.id];
+    chip.addEventListener('click', ()=>onAllyPick(f));
+    wrap.appendChild(chip);
+  });
+}
+function onAllyPick(f){
+  if(battle.locked) return;
+  // Doctor Banana can target any dead teammate except himself for a full revive.
+  if(battle.chosenAction==='special' && battle.chosenAttacker && battle.chosenAttacker.ability==='doctorBananaRevive'){
+    if((f.curHp<=0 || f.alive===false) && f.id!=='doctorBanana'){
+      sfxClick();
+      resolvePlayerAction(f);
+    }
+    return;
+  }
+  if(f.curHp<=0) return;
+  // When Cactus Lat's special is armed, clicking an ally selects the retaliation target.
+  if(battle.chosenAction==='special' && battle.chosenAttacker && battle.chosenAttacker.ability==='rageGuard'){
+    sfxClick();
+    resolvePlayerAction(f);
+    return;
+  }
+  if(battle.chosenAction==='special' && battle.chosenAttacker && battle.chosenAttacker.ability==='elderPotion'){
+    if(f.curHp>0 && f!==battle.chosenAttacker){
+      sfxClick();
+      resolvePlayerAction(f);
+    }
+    return;
+  }
+  sfxClick();
+  battle.chosenAttacker = (battle.chosenAttacker===f)? null : f;
+  battle.chosenAction = null;
+  renderAllyPicker(); updateActionButtons(); updateHint();
+}
+function updateActionButtons(){
+  const atkBtn = document.getElementById('attackBtn');
+  const spBtn = document.getElementById('specialBtn');
+  const has = !!battle.chosenAttacker;
+  atkBtn.disabled = !has || battle.locked;
+  const repeatable = has && (battle.chosenAttacker.ability==='timeShift' || battle.chosenAttacker.ability==='elderPotion');
+  const repeatableBlocked = repeatable && battle.chosenAttacker.ability==='elderPotion' && battle.chosenAttacker.rageUsed;
+  spBtn.disabled = !has || battle.locked || (has && !repeatable && battle.chosenAttacker.usedSpecial) || (has && battle.chosenAttacker.abilityDisabled)
+    || (has && battle.chosenAttacker.ability==='doctorBananaRevive' && reviveCandidates(battle.player).length===0) || repeatableBlocked;
+  if(has && battle.chosenAttacker.ability==='elderPotion' && battle.chosenAttacker.usedSpecial) spBtn.textContent='تعویض جان 💚';
+  else if(has && battle.chosenAttacker.ability==='timeShift' && battle.chosenAttacker.curHp/battle.chosenAttacker.maxHp<=0.3) spBtn.textContent='خشم زمانی ⏳💥';
+  else spBtn.textContent = has ? (battle.chosenAttacker.abilityName + ' ✨') : 'توانایی ویژه ✨';
+}
+function updateHint(){
+  const hint = document.getElementById('hintText');
+  if(!battle.chosenAttacker){ hint.textContent='اول یکی از گل‌هات رو انتخاب کن'; return; }
+  if(!battle.chosenAction){ hint.textContent = 'حمله عادی یا توانایی ویژه رو بزن'; return; }
+  if(needsEnemyTarget()){ hint.textContent = 'حالا روی یک دشمن بزن 👆'; }
+  else if(needsAllyTarget()){ hint.textContent = 'حالا خودت یا یکی از هم‌تیمی‌هات رو انتخاب کن 🤠🌵'; }
+}
+function needsEnemyTarget(){
+  if(!battle.chosenAction) return false;
+  if(battle.chosenAction==='attack') return true;
+  if(battle.chosenAction==='special'){
+    const ab = battle.chosenAttacker.ability;
+    return ab==='power' || ab==='double' || ab==='poison' || ab==='burnAbility' || ab==='heroRage' || ab==='iceFreeze' || ab==='deepSleep' || ab==='carrotShot' || ab==='watermelonBlast' || ab==='berryDrain' || ab==='coconutSmash' || (ab==='timeShift' && battle.chosenAttacker.curHp/battle.chosenAttacker.maxHp>0.3);
+  }
+  return false;
+}
+function needsAllyTarget(){
+  return battle.chosenAction==='special' && battle.chosenAttacker && (battle.chosenAttacker.ability==='rageGuard' || battle.chosenAttacker.ability==='doctorBananaRevive');
+}
+document.getElementById('attackBtn').addEventListener('click', ()=>{
+  if(!battle.chosenAttacker || battle.locked) return;
+  sfxClick();
+  battle.chosenAction='attack';
+  document.querySelectorAll('#enemyRow .fighter').forEach(el=>{
+    const f = findByUid(el.dataset.uid);
+    if(f && f.curHp>0) el.classList.add('targetable');
+  });
+  updateHint();
+});
+document.getElementById('specialBtn').addEventListener('click', ()=>{
+  if(!battle.chosenAttacker || battle.locked || (battle.chosenAttacker.usedSpecial && !['timeShift','elderPotion'].includes(battle.chosenAttacker.ability))) return;
+  sfxClick();
+  battle.chosenAction='special';
+  const ab = battle.chosenAttacker.ability;
+  if(ab==='power' || ab==='double' || ab==='poison' || ab==='burnAbility' || ab==='heroRage' || ab==='iceFreeze' || ab==='deepSleep' || ab==='carrotShot' || ab==='watermelonBlast' || ab==='berryDrain' || ab==='coconutSmash' || (ab==='timeShift' && battle.chosenAttacker.curHp/battle.chosenAttacker.maxHp>0.3)){
+    document.querySelectorAll('#enemyRow .fighter').forEach(el=>{
+      const f = findByUid(el.dataset.uid);
+      if(f && f.curHp>0) el.classList.add('targetable');
+    });
+    updateHint();
+  } else if(ab==='rageGuard'){
+    document.querySelectorAll('#allyPicker .allyChip').forEach(el=>{
+      const uid = el.querySelector('[data-uid]')?.dataset.uid;
+      const f = uid ? findByUid(uid) : null;
+      // ally chips don't carry uid directly; map by order instead below
+      el.classList.add('targetable');
+    });
+    updateHint();
+  } else if(ab==='doctorBananaRevive'){
+    renderAllyPicker();
+    updateHint();
+  } else if(ab==='elderPotion'){
+    if(battle.chosenAttacker.usedSpecial) renderAllyPicker();
+    else resolvePlayerAction(null);
+  } else {
+    resolvePlayerAction(null);
+  }
+});
+function findByUid(uid){ return [...battle.player, ...battle.enemy].find(f=>f.uid===uid); }
+function onEnemyClick(target){
+  if(battle.locked) return;
+  if(!battle.chosenAttacker || !battle.chosenAction) return;
+  if(!needsEnemyTarget()) return;
+  if(target.curHp<=0) return;
+  resolvePlayerAction(target);
+}
+
+function showBubble(fighter, text){
+  const el = fighterEl(fighter);
+  if(!el || !text) return;
+  const bubble = document.createElement('div');
+  bubble.className = 'speechBubble';
+  bubble.textContent = text;
+  el.querySelector('.avatarBox').appendChild(bubble);
+  setTimeout(()=>bubble.remove(), 1700);
+}
+function randomLine(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
+
+/* ---------- Action resolution ---------- */
+function resolvePlayerAction(target){
+  battle.locked = true;
+  document.querySelectorAll('.fighter').forEach(el=>el.classList.remove('targetable'));
+  const attacker = battle.chosenAttacker;
+  const action = battle.chosenAction;
+  const attackerEl = fighterEl(attacker);
+  attackerEl.classList.add('attacking');
+
+  if(action==='attack' && attacker.lines) showBubble(attacker, randomLine(attacker.lines.attack));
+  if(action==='special' && attacker.lines) showBubble(attacker, randomLine(attacker.lines.special));
+
+  setTimeout(()=>{
+    attackerEl.classList.remove('attacking');
+    if(action==='attack'){
+      sfxHit();
+      if(attacker.id==='timeCucumber'){
+        const direct = Math.max(4, Math.floor(attacker.atk*0.45));
+        dealDamage(attacker, target, direct);
+        target.timeMark = (target.timeMark||0) + 1;
+        target.timeMarkDamage = (target.timeMarkDamage||0) + 40;
+        setLog(`${attacker.name} ضربه‌ای سبک زد و یک اثر زمانی ۴۰ آسیب روی ${target.name} گذاشت! ⏳🥒`);
+        renderBattle();
+        setTimeout(()=>finishPlayerTurn(),700);
+      } else {
+        dealDamage(attacker, target, attacker.atk + Math.floor(Math.random()*6));
+        afterHitStep(target, ()=> finishPlayerTurn());
+      }
+    } else if(action==='special'){
+      const ab = attacker.ability;
+      if(ab==='timeShift'){
+        if(attacker.curHp/attacker.maxHp<=0.3){
+          attacker.rageUsed=true;
+          sfxExplosion();
+          const marked = battle.enemy.filter(f=>f.curHp>0 && (f.timeMark||0)>0);
+          let total=0;
+          marked.forEach(f=>{ total += f.timeMarkDamage||0; dealDamage(attacker,f,f.timeMarkDamage||0); f.timeMark=0; f.timeMarkDamage=0; });
+          setLog(marked.length ? `${attacker.name} خشم زمانی را آزاد کرد! همه اثرهای زمانی پاک شدند و ${total} آسیب زمانی وارد شد! ⏳💥` : `${attacker.name} خشم زمانی آزاد کرد، اما اثر زمانی فعالی باقی نمانده بود! ⏳💥`);
+          renderBattle();
+          setTimeout(()=>{if(checkGameOver())return;finishPlayerTurn()},800);
+        } else {
+          target.timeMark=(target.timeMark||0)+1;
+          target.timeMarkDamage=(target.timeMarkDamage||0)+40;
+          setLog(`${attacker.name} اثر زمانی دیگری روی ${target.name} گذاشت! اکنون ${target.timeMarkDamage} آسیب زمانی ذخیره شده است. ⏳🥒`);
+          renderBattle();
+          setTimeout(()=>finishPlayerTurn(),700);
+        }
+      } else if(ab==='elderPotion'){
+        if(!attacker.usedSpecial){
+          attacker.usedSpecial=true;
+          attacker.atkBuff=(attacker.atkBuff||1)*1.18;
+          sfxHeal();
+          popText(attacker,'قدرت دائمی +18% 🧪',true);
+          setLog(`${attacker.name} معجون جادویی را نوشید؛ قدرت حمله‌اش برای همیشه ۱۸٪ بیشتر شد! 🧪🍊`);
+          renderBattle();
+          setTimeout(()=>finishPlayerTurn(),800);
+        } else if(target && target!==attacker && target.curHp>0 && !attacker.rageUsed){
+          attacker.rageUsed=true;
+          const oldHp=attacker.curHp, allyHp=target.curHp;
+          attacker.curHp=allyHp; target.curHp=oldHp;
+          sfxExplosion();
+          popText(attacker,'↔️ جان عوض شد',true);
+          popText(target,'↔️ جان عوض شد',true);
+          setLog(`${attacker.name} با خشم خود، جانش را با ${target.name} عوض کرد! 🍊⚡`);
+          renderBattle();
+          setTimeout(()=>finishPlayerTurn(),850);
+        } else {
+          battle.locked=false; renderBattle();
+        }
+      } else {
+        attacker.usedSpecial = true;
+      if(ab==='power'){
+        sfxHit();
+        const dmg = Math.floor(attacker.atk*1.9) + Math.floor(Math.random()*6);
+        dealDamage(attacker, target, dmg);
+        afterHitStep(target, ()=> finishPlayerTurn());
+      } else if(ab==='double'){
+        sfxHit();
+        dealDamage(attacker, target, Math.floor(attacker.atk*0.7));
+        afterHitStep(target, ()=>{
+          if(target.curHp>0){
+            attackerEl.classList.add('attacking');
+            setTimeout(()=>{
+              attackerEl.classList.remove('attacking');
+              sfxHit();
+              dealDamage(attacker, target, Math.floor(attacker.atk*0.7));
+              afterHitStep(target, ()=> finishPlayerTurn());
+            }, 260);
+          } else { finishPlayerTurn(); }
+        });
+      } else if(ab==='poison'){
+        sfxHit(); target.poisonedTurns=3;
+        dealDamage(attacker,target,Math.floor(attacker.atk*0.9)+Math.floor(Math.random()*4));
+        setLog(`${attacker.name} نیش سمی زد! ${target.name} برای ۳ نوبت مسموم شد! ☠️`);
+        renderBattle(); setTimeout(()=> finishPlayerTurn(),650);
+      } else if(ab==='burnAbility'){
+        sfxHit();
+        // فقط همان دشمن انتخاب‌شده توانایی‌اش را از دست می‌دهد؛
+        // وضعیت بقیه گل‌ها اصلاً تغییر نمی‌کند.
+        target.abilityDisabled = true;
+        target.usedSpecial = false;
+        setLog(`${attacker.name} با خشم کدویی، فقط توانایی «${target.abilityName}» از ${target.name} رو تا پایان این نبرد سوزوند! 🔥🎃`);
+        showBubble(target, 'خشمم خاموش شد! 😱');
+        renderBattle();
+        setTimeout(()=> finishPlayerTurn(), 700);
+      } else if(ab==='heroRage'){
+        sfxHit();
+        target.heroRage = true;
+        setLog(`${attacker.name} خشم قهرمان را روی ${target.name} فعال کرد! از این به بعد آسیبِ تیم تو به او دو برابر می‌شود! 🥦🔥💥`);
+        showBubble(target, 'آخ! ضربه‌های بعدی دو برابر درد دارن! 😱🥦');
+        renderBattle();
+        setTimeout(()=> finishPlayerTurn(), 700);
+      } else if(ab==='chameleonGuard'){
+        sfxShield(); attacker.damageReduction=0.5; setLog(`${attacker.name} استتار آفتابی گرفت؛ آسیب دریافتی نصف شد! 🦎🌈`); renderBattle(); setTimeout(()=>finishPlayerTurn(),700);
+      } else if(ab==='bloodThorns'){
+        sfxShield(); attacker.thornCounter=3; setLog(`${attacker.name} سه ضربه بعدی را با خار خونین پس می‌فرستد! 🌹🩸`); renderBattle(); setTimeout(()=>finishPlayerTurn(),700);
+      } else if(ab==='tearGas'){
+        sfxHit(); battle.enemy.filter(f=>f.curHp>0).forEach(f=>f.abilityDisabled=true); setLog(`${attacker.name} ابر اشک‌آور را پخش کرد؛ توانایی همه دشمنان تا پایان نبرد خاموش شد! 😭🧅`); renderBattle(); setTimeout(()=>finishPlayerTurn(),800);
+      } else if(ab==='sporeCloud'){
+        sfxHit(); battle.enemy.filter(f=>f.curHp>0).forEach(f=>{f.poisonedTurns=3; dealDamage(attacker,f,Math.floor(attacker.atk*.55));}); setLog(`${attacker.name} ابر هاگ سمی پخش کرد! همه دشمنان مسموم شدند! ☠️🍄`); renderBattle(); setTimeout(()=>finishPlayerTurn(),800);
+      } else if(ab==='cornBarrage'){
+        sfxHit(); const targets=battle.enemy.filter(f=>f.curHp>0); for(let i=0;i<3;i++){ if(!targets.length) break; const t=targets[Math.floor(Math.random()*targets.length)]; dealDamage(attacker,t,Math.max(6,Math.floor(attacker.atk*.62))); } setLog(`${attacker.name} رگبار سه‌تایی ذرت شلیک کرد! 🌽💥`); renderBattle(); setTimeout(()=>finishPlayerTurn(),800);
+      } else if(ab==='tomatoFury'){
+        sfxHit(); attacker.atkBuff=1.75; setLog(`${attacker.name} وارد حالت خشم سرخ شد؛ قدرت حمله‌اش ۷۵٪ بیشتر شد! 🍅🔥`); renderBattle(); setTimeout(()=>finishPlayerTurn(),700);
+      } else if(ab==='potatoArmor'){
+        sfxShield(); attacker.shielded=true; attacker.damageReduction=.7; setLog(`${attacker.name} زره سنگین فعال کرد؛ آسیب دریافتی ۷۰٪ کمتر شد! 🥔🛡️`); renderBattle(); setTimeout(()=>finishPlayerTurn(),700);
+      } else if(ab==='garlicShield'){
+        sfxShield(); battle.player.filter(f=>f.curHp>0).forEach(f=>{f.shielded=true; f.damageReduction=.35;}); setLog(`${attacker.name} سپر سیر را روی کل تیم فعال کرد! 🧄🛡️`); renderBattle(); setTimeout(()=>finishPlayerTurn(),800);
+      } else if(ab==='magicGrowth'){
+        sfxHeal(); attacker.curHp=Math.min(attacker.maxHp,attacker.curHp+Math.floor(attacker.maxHp*.45)); popText(attacker,'+45% HP 🫘✨',true); setLog(`${attacker.name} با رشد جادویی خودش را تقویت کرد! 🫘✨`); renderBattle(); setTimeout(()=>finishPlayerTurn(),700);
+      } else if(ab==='ancientRevive'){
+        sfxHeal(); const dead=battle.player.filter(f=>f.curHp<=0||f.alive===false); dead.forEach(f=>{f.curHp=Math.max(1,Math.floor(f.maxHp*.25));f.alive=true;f.shielded=false;f.poisonedTurns=0;f.abilityDisabled=false;}); setLog(dead.length?`${attacker.name} با ریشه‌های باستانی ${dead.length} یار را با ۲۵٪ جان برگرداند! 🌳✨`:`ریشه‌های باستانی فراخوانده شد، اما یار مرده‌ای نبود. 🌳`); renderBattle(); setTimeout(()=>finishPlayerTurn(),900);
+      } else if(ab==='iceFreeze'){ sfxHit(); target.skipTurns=1; setLog(`${attacker.name} ${target.name} را منجمد کرد! ❄️🌵`); renderBattle(); setTimeout(()=>finishPlayerTurn(),700);
+      } else if(ab==='deepSleep'){ sfxHit(); target.skipTurns=1; setLog(`${attacker.name} ${target.name} را به خواب عمیق فرستاد! 😴💤`); renderBattle(); setTimeout(()=>finishPlayerTurn(),700);
+      } else if(ab==='carrotShot'){ sfxHit(); dealDamage(attacker,target,Math.floor(attacker.atk*2.35)); setLog(`${attacker.name} شلیک دقیق زد! 🎯🥕`); renderBattle(); setTimeout(()=>finishPlayerTurn(),700);
+      } else if(ab==='watermelonBlast'){ sfxExplosion(); const d=Math.max(30,Math.floor(attacker.atk*2.2)); dealDamage(attacker,target,d); attacker.curHp=0;attacker.alive=false;setLog(`${attacker.name} منفجر شد و ${d} آسیب زد! 💥🍉`); renderBattle(); setTimeout(()=>{if(checkGameOver())return;finishPlayerTurn()},700);
+      } else if(ab==='berryDrain'){ sfxHit(); const d=Math.floor(attacker.atk*1.5); dealDamage(attacker,target,d); attacker.curHp=Math.min(attacker.maxHp,attacker.curHp+Math.floor(d*.35)); popText(attacker,'+'+Math.floor(d*.35)+' ❤️',true); setLog(`${attacker.name} بخشی از جان ${target.name} را دزدید! 🍓🩸`); renderBattle(); setTimeout(()=>finishPlayerTurn(),700);
+      } else if(ab==='coconutSmash'){ sfxHit(); const d=Math.floor(attacker.atk*2); dealDamage(attacker,target,d); target.skipTurns=1; setLog(`${attacker.name} ضربه نارگیلی زد و ${target.name} را گیج کرد! 🥥💥`); renderBattle(); setTimeout(()=>finishPlayerTurn(),700);
+      } else if(ab==='pineappleExplosion'){
+        sfxExplosion();
+        attackerEl.classList.add('exploding');
+        document.querySelectorAll('#enemyRow .fighter').forEach(el=>el.classList.add('hit'));
+        const blast = Math.max(24, Math.floor(attacker.atk*1.65) + Math.floor(Math.random()*7));
+        setLog(`${attacker.name} با خشم آناناس منفجر شد! 💥🍍 همه دشمنان ${blast} آسیب دیدند!`);
+        battle.enemy.filter(f=>f.curHp>0).forEach(enemy=>dealDamage(attacker, enemy, blast));
+        attacker.curHp = 0;
+        attacker.alive = false;
+        popText(attacker, '💥 -ALL', false);
+        setTimeout(()=>{
+          renderBattle();
+          if(checkGameOver()) return;
+          finishPlayerTurn();
+        }, 720);
+      } else if(ab==='rageGuard'){
+        sfxShield();
+        target.rageGuard = true;
+        setLog(`${attacker.name} خشم لات را به ${target.name} داد! هر ضربه به او، به مهاجم هم آسیب می‌زند. 🤠🌵🔥`);
+        showBubble(target, 'هرکی بهم بزنه، جوابشو می‌گیره! 🌵💥');
+        renderBattle();
+        setTimeout(()=> finishPlayerTurn(), 700);
+      } else if(ab==='doctorBananaRevive'){
+        sfxHeal();
+        if(target && (target.curHp<=0 || target.alive===false) && target.id!=='doctorBanana'){
+          target.curHp = target.maxHp;
+          target.alive = true;
+          target.shielded = false;
+          target.poisonedTurns = 0;
+          target.rageGuard = false;
+          target.heroRage = false;
+          target.abilityDisabled = false;
+          popText(target, 'FULL HP! 🍌✨', true);
+          setLog(`${attacker.name} با خشم احیاگر، ${target.name} را با جان کامل برگرداند! 🍌🩺✨`);
+          showBubble(target, 'با تمام جون برگشتم! 😤🔥');
+          renderBattle();
+          setTimeout(()=> finishPlayerTurn(), 800);
+        } else {
+          setLog('دکتر موز باید یک یار شکست‌خورده را انتخاب کند! 🍌🩺');
+          battle.locked=false;
+          renderBattle();
+        }
+      } else if(ab==='heal'){
+        sfxHeal();
+        const lowest = [...battle.player].filter(f=>f.curHp>0).sort((a,b)=>(a.curHp/a.maxHp)-(b.curHp/b.maxHp))[0];
+        const healAmt = Math.floor(lowest.maxHp*0.32);
+        lowest.curHp = Math.min(lowest.maxHp, lowest.curHp+healAmt);
+        popText(lowest, '+'+healAmt, true);
+        refreshHp(lowest);
+        setLog(`${attacker.name} به ${lowest.name} جان بخشید! (+${healAmt})`);
+        setTimeout(()=> finishPlayerTurn(), 500);
+      } else if(ab==='shield'){
+        sfxShield();
+        attacker.shielded = true;
+        setLog(`${attacker.name} یک سپر محافظ فعال کرد! 🛡️`);
+        renderBattle();
+        setTimeout(()=> finishPlayerTurn(), 500);
+      }
+      }
+    }
+  }, 260);
+}
+
+function dealDamage(attacker, target, dmg){
+  // Tomato Fury: attacker's own attack buff multiplies every hit it lands.
+  if(attacker && attacker.atkBuff && attacker.atkBuff !== 1){
+    dmg = Math.floor(dmg * attacker.atkBuff);
+  }
+  // Broccoli Hero's rage: damage dealt by the opposing team is doubled.
+  if(target.heroRage && attacker && attacker.team && target.team && attacker.team !== target.team){
+    dmg = Math.floor(dmg * 2);
+    setLog(`🥦🔥 خشم قهرمان! آسیب واردشده به ${target.name} دو برابر شد! (-${dmg})`);
+  }
+  if(target.shielded){
+    dmg = Math.floor(dmg*0.35);
+    target.shielded = false;
+    setLog(`${attacker.name} به ${target.name} زد ولی سپرش ضربه رو کم کرد! (-${dmg})`);
+  } else if(target.damageReduction>0){
+    // Chameleon Guard / Potato Armor / Garlic Shield: persistent % damage reduction.
+    dmg = Math.max(0, Math.floor(dmg*(1-target.damageReduction)));
+    setLog(`${attacker.name} به ${target.name} زد ولی محافظتش ضربه رو کم کرد! (-${dmg})`);
+  } else {
+    setLog(`${attacker.name} به ${target.name} ضربه زد! (-${dmg})`);
+  }
+  target.curHp = Math.max(0, target.curHp - dmg);
+  popText(target, '-'+dmg, false);
+  const el = fighterEl(target);
+  if(el){ el.classList.add('hit'); setTimeout(()=>el.classList.remove('hit'), 400); }
+  refreshHp(target);
+  if(target.curHp<=0){ target.alive=false; }
+  // Cactus Lat's rage counterattack: reflected damage cannot trigger another reflection.
+  if(dmg>0 && target.curHp>0 && target.rageGuard && attacker && attacker.curHp>0){
+    const reflect = Math.max(7, Math.floor(dmg*0.55));
+    setTimeout(()=>{
+      if(attacker.curHp<=0) return;
+      attacker.curHp = Math.max(0, attacker.curHp - reflect);
+      popText(attacker, '-'+reflect+' 🌵', false);
+      const ael = fighterEl(attacker);
+      if(ael){ ael.classList.add('hit'); setTimeout(()=>ael.classList.remove('hit'),400); }
+      refreshHp(attacker);
+      if(attacker.curHp<=0) attacker.alive=false;
+      setLog(`🌵 خشم لات! ${target.name} ضربه را برگرداند و ${reflect} آسیب به ${attacker.name} زد!`);
+      sfxHit();
+      renderBattle();
+      checkGameOver();
+    }, 180);
+  }
+  // Blood Rose's thorns: reflects the next few hits it takes back at the attacker.
+  if(dmg>0 && target.curHp>0 && target.thornCounter>0 && attacker && attacker.curHp>0){
+    target.thornCounter -= 1;
+    const thornReflect = Math.max(6, Math.floor(dmg*0.5));
+    setTimeout(()=>{
+      if(attacker.curHp<=0) return;
+      attacker.curHp = Math.max(0, attacker.curHp - thornReflect);
+      popText(attacker, '-'+thornReflect+' 🌹', false);
+      const tel = fighterEl(attacker);
+      if(tel){ tel.classList.add('hit'); setTimeout(()=>tel.classList.remove('hit'),400); }
+      refreshHp(attacker);
+      if(attacker.curHp<=0) attacker.alive=false;
+      setLog(`🌹 خار خونین! ${target.name} ${thornReflect} آسیب به ${attacker.name} برگرداند!`);
+      sfxHit();
+      renderBattle();
+      checkGameOver();
+    }, 180);
+  }
+  if(target.curHp>0 && target.curHp/target.maxHp < 0.3 && !target.saidLowHp && target.lines){
+    target.saidLowHp = true;
+    setTimeout(()=> showBubble(target, randomLine(target.lines.lowhp)), 300);
+  }
+}
+function popText(fighter, text, isHeal){
+  const el = fighterEl(fighter);
+  if(!el) return;
+  const pop = document.createElement('div');
+  pop.className = 'dmgPop' + (isHeal?' heal':'');
+  pop.textContent = text;
+  el.querySelector('.avatarBox').appendChild(pop);
+  setTimeout(()=>pop.remove(), 900);
+}
+function refreshHp(fighter){
+  const el = fighterEl(fighter);
+  if(!el) return;
+  const fill = el.querySelector('.hpFill');
+  const pct = Math.max(0, fighter.curHp/fighter.maxHp*100);
+  fill.style.width = pct+'%';
+  fill.classList.toggle('low', fighter.curHp/fighter.maxHp<0.3);
+  if(fighter.curHp<=0){ el.classList.add('dead'); }
+}
+function afterHitStep(target, cb){ setTimeout(cb, 420); }
+
+function finishPlayerTurn(){
+  battle.chosenAttacker = null;
+  battle.chosenAction = null;
+  if(checkGameOver()) return;
+  renderAllyPicker(); updateActionButtons(); updateHint();
+  setTimeout(enemyTurn, 500);
+}
+
+/* ---------- Enemy AI turn ---------- */
+function enemyTurn(){
+  let aliveEnemies = battle.enemy.filter(f=>f.curHp>0);
+  let alivePlayers = battle.player.filter(f=>f.curHp>0);
+  return enemyTurnNormal();
+}
+function enemyTurnNormal(){
+  const aliveEnemies = battle.enemy.filter(f=>f.curHp>0);
+  const alivePlayers = battle.player.filter(f=>f.curHp>0);
+  if(aliveEnemies.length===0 || alivePlayers.length===0){ checkGameOver(); return; }
+
+  // Poison is resolved at the START of every enemy turn.
+  // Each stack lasts exactly 3 enemy turns and deals real HP damage.
+  const poisoned = aliveEnemies.filter(f=>f.curHp>0 && f.poisonedTurns>0);
+  if(poisoned.length){
+    poisoned.forEach(f=>{
+      const d = Math.max(6, Math.floor(f.maxHp*0.10));
+      f.poisonedTurns = Math.max(0, f.poisonedTurns - 1);
+      f.curHp = Math.max(0, f.curHp - d);
+      popText(f, '-'+d+' ☠️', false);
+      const el = fighterEl(f);
+      if(el){ el.classList.add('hit'); setTimeout(()=>el.classList.remove('hit'),400); }
+      refreshHp(f);
+      if(f.curHp<=0) f.alive=false;
+    });
+    setLog(`☠️ سم فعال شد! ${poisoned.map(f=>f.name).join(' و ')} آسیب واقعی دیدند.`);
+    sfxHit();
+    renderBattle();
+    if(checkGameOver()) return;
+    // Continue with the normal enemy attack after the poison tick.
+    setTimeout(()=>enemyTurnNormal(), 650);
+    return;
+  }
+
+  if(aliveEnemies.length===0 || alivePlayers.length===0){ checkGameOver(); return; }
+
+  if(aliveEnemies.length===0 || alivePlayers.length===0){ checkGameOver(); return; }
+
+  const readyEnemies = aliveEnemies.filter(f=>f.skipTurns<=0);
+  if(!readyEnemies.length){ aliveEnemies.forEach(f=>f.skipTurns=Math.max(0,f.skipTurns-1)); setLog('😴 همه گل‌های دشمن نوبتشان را از دست دادند!'); setTimeout(afterEnemyStep,600); return; }
+  const attacker = readyEnemies[Math.floor(Math.random()*readyEnemies.length)];
+  const readyPlayers = alivePlayers.filter(f=>f.skipTurns<=0);
+  const target = (readyPlayers.length?readyPlayers:alivePlayers)[Math.floor(Math.random()*(readyPlayers.length?readyPlayers:alivePlayers).length)];
+  aliveEnemies.forEach(f=>{if(f.skipTurns>0)f.skipTurns--;});
+  const enemyReviveCandidates = attacker.ability==='doctorBananaRevive' ? reviveCandidates(battle.enemy) : [];
+  const canSpecial = attacker.ability!=='doctorBananaRevive' || enemyReviveCandidates.length>0;
+  const repeatableEnemy = attacker.ability==='timeShift' || attacker.ability==='elderPotion';
+  const repeatBlocked = attacker.ability==='elderPotion' && attacker.rageUsed;
+  const useSpecial = !attacker.abilityDisabled && !repeatBlocked && (repeatableEnemy || !attacker.usedSpecial) && canSpecial && Math.random()<0.4;
+  const attackerEl = fighterEl(attacker);
+  attackerEl.classList.add('attackingEnemy');
+
+  if(attacker.lines) showBubble(attacker, useSpecial? randomLine(attacker.lines.special) : randomLine(attacker.lines.attack));
+
+  setTimeout(()=>{
+    attackerEl.classList.remove('attackingEnemy');
+    if(useSpecial){
+      const ab = attacker.ability;
+      if(ab==='timeShift'){
+        if(attacker.curHp/attacker.maxHp<=0.3){
+          attacker.rageUsed=true;
+          sfxExplosion();
+          const marked=battle.player.filter(f=>f.curHp>0 && (f.timeMark||0)>0);
+          let total=0;
+          marked.forEach(f=>{total+=f.timeMarkDamage||0;dealDamage(attacker,f,f.timeMarkDamage||0);f.timeMark=0;f.timeMarkDamage=0;});
+          setLog(marked.length?`${attacker.name} خشم زمانی را آزاد کرد و ${total} آسیب ذخیره‌شده وارد کرد! ⏳💥`:`${attacker.name} خشم زمانی آزاد شد، اما اثر زمانی فعالی نبود! ⏳💥`);
+          renderBattle(); setTimeout(afterEnemyStep,800);
+        } else {
+          target.timeMark=(target.timeMark||0)+1; target.timeMarkDamage=(target.timeMarkDamage||0)+40;
+          setLog(`${attacker.name} اثر زمانی دیگری روی ${target.name} گذاشت! ⏳🥒`);
+          renderBattle(); setTimeout(afterEnemyStep,700);
+        }
+      } else if(ab==='elderPotion'){
+        if(!attacker.usedSpecial){
+          attacker.usedSpecial=true; attacker.atkBuff=(attacker.atkBuff||1)*1.18;
+          sfxHeal(); setLog(`${attacker.name} معجون جادویی را نوشید و قدرتش برای همیشه ۱۸٪ بیشتر شد! 🧪🍊`);
+          renderBattle(); setTimeout(afterEnemyStep,800);
+        } else {
+          const candidates=battle.enemy.filter(f=>f.curHp>0 && f!==attacker);
+          const ally=candidates.length?candidates[Math.floor(Math.random()*candidates.length)]:null;
+          if(ally){ attacker.rageUsed=true; const h=attacker.curHp; attacker.curHp=ally.curHp; ally.curHp=h; sfxExplosion(); setLog(`${attacker.name} با خشمش جان خود را با ${ally.name} عوض کرد! 🍊⚡`); renderBattle(); setTimeout(afterEnemyStep,850); }
+          else setTimeout(afterEnemyStep,500);
+        }
+      } else {
+      attacker.usedSpecial = true;
+      if(ab==='power'){
+        sfxHit();
+        dealDamage(attacker, target, Math.floor(attacker.atk*1.9)+Math.floor(Math.random()*6));
+        setTimeout(afterEnemyStep, 420);
+      } else if(ab==='double'){
+        sfxHit();
+        dealDamage(attacker, target, Math.floor(attacker.atk*0.7));
+        setTimeout(()=>{
+          if(target.curHp>0){
+            attackerEl.classList.add('attackingEnemy');
+            setTimeout(()=>{
+              attackerEl.classList.remove('attackingEnemy');
+              sfxHit();
+              dealDamage(attacker, target, Math.floor(attacker.atk*0.7));
+              setTimeout(afterEnemyStep, 420);
+            },260);
+          } else { afterEnemyStep(); }
+        },420);
+      } else if(ab==='poison'){
+        sfxHit(); target.poisonedTurns=3;
+        dealDamage(attacker,target,Math.floor(attacker.atk*0.9)+Math.floor(Math.random()*4));
+        setLog(`${attacker.name} نیش سمی زد! ${target.name} برای ۳ نوبت مسموم شد! ☠️`);
+        renderBattle(); setTimeout(afterEnemyStep,650);
+      } else if(ab==='heroRage'){
+        sfxHit();
+        target.heroRage = true;
+        setLog(`${attacker.name} خشم قهرمان را روی ${target.name} فعال کرد! از این به بعد آسیبِ تیم حریف به او دو برابر می‌شود! 🥦🔥💥`);
+        showBubble(target, 'آخ! ضربه‌های بعدی دو برابر درد دارن! 😱🥦');
+        renderBattle();
+        setTimeout(()=> finishPlayerTurn(), 700);
+      } else if(ab==='pineappleExplosion'){
+        sfxExplosion();
+        attackerEl.classList.add('exploding');
+        document.querySelectorAll('#playerRow .fighter').forEach(el=>el.classList.add('hit'));
+        const blast = Math.max(24, Math.floor(attacker.atk*1.65) + Math.floor(Math.random()*7));
+        setLog(`${attacker.name} با خشم آناناس منفجر شد! 💥🍍 همه گل‌های تو ${blast} آسیب دیدند!`);
+        battle.player.filter(f=>f.curHp>0).forEach(player=>dealDamage(attacker, player, blast));
+        attacker.curHp = 0;
+        attacker.alive = false;
+        popText(attacker, '💥 -ALL', false);
+        setTimeout(()=>{
+          renderBattle();
+          if(checkGameOver()) return;
+          afterEnemyStep();
+        }, 720);
+      } else if(ab==='rageGuard'){
+        sfxShield();
+        const candidates = battle.enemy.filter(f=>f.curHp>0);
+        const rageTarget = candidates[Math.floor(Math.random()*candidates.length)];
+        rageTarget.rageGuard = true;
+        setLog(`${attacker.name} خشم لات را به ${rageTarget.name} داد! هر ضربه به او، به مهاجم هم برمی‌گردد. 🤠🌵🔥`);
+        showBubble(rageTarget, 'هرکی بهم بزنه، جوابشو می‌گیره! 🌵💥');
+        renderBattle();
+        setTimeout(afterEnemyStep,700);
+      } else if(ab==='burnAbility'){
+        // فقط یک گل از تیم بازیکن هدف قرار می‌گیرد؛ بقیه توانایی‌ها دست‌نخورده می‌مانند.
+        sfxHit();
+        const candidates = battle.player.filter(f=>f.curHp>0 && !f.abilityDisabled);
+        const burnTarget = candidates.length
+          ? candidates[Math.floor(Math.random()*candidates.length)]
+          : null;
+        if(burnTarget){
+          burnTarget.abilityDisabled = true;
+          setLog(`${attacker.name} با خشم کدویی، فقط توانایی «${burnTarget.abilityName}» از ${burnTarget.name} رو تا پایان این نبرد سوزوند! 🔥🎃`);
+          showBubble(burnTarget, 'تواناییم... سوخت! 😱');
+        } else {
+          setLog(`${attacker.name} خشم کدویی زد، اما همه توانایی‌های قابل‌هدف قبلاً سوخته بودند! 🔥🎃`);
+        }
+        renderBattle();
+        setTimeout(afterEnemyStep,700);
+      } else if(ab==='doctorBananaRevive'){
+        sfxHeal();
+        const candidates = reviveCandidates(battle.enemy);
+        const reviveTarget = candidates.length ? candidates[Math.floor(Math.random()*candidates.length)] : null;
+        if(reviveTarget){
+          reviveTarget.curHp = reviveTarget.maxHp;
+          reviveTarget.alive = true;
+          reviveTarget.shielded = false;
+          reviveTarget.poisonedTurns = 0;
+          reviveTarget.rageGuard = false;
+          reviveTarget.heroRage = false;
+          reviveTarget.abilityDisabled = false;
+          popText(reviveTarget, 'FULL HP! 🍌✨', true);
+          setLog(`${attacker.name} با خشم احیاگر، ${reviveTarget.name} را با جان کامل برگرداند! 🍌🩺✨`);
+          showBubble(reviveTarget, 'با تمام جون برگشتم! 😤🔥');
+          renderBattle();
+        } else {
+          setLog(`${attacker.name} خشم احیاگر زد، اما یار مردِ شکست‌خورده‌ای برای احیا نداشت. 🍌🩺`);
+        }
+        setTimeout(afterEnemyStep,800);
+      } else if(ab==='heal'){
+        sfxHeal();
+        const lowest = [...battle.enemy].filter(f=>f.curHp>0).sort((a,b)=>(a.curHp/a.maxHp)-(b.curHp/b.maxHp))[0];
+        const healAmt = Math.floor(lowest.maxHp*0.32);
+        lowest.curHp = Math.min(lowest.maxHp, lowest.curHp+healAmt);
+        popText(lowest,'+'+healAmt,true);
+        refreshHp(lowest);
+        setLog(`${attacker.name} تیمش رو شفا داد! (+${healAmt})`);
+        setTimeout(afterEnemyStep, 500);
+      } else if(ab==='shield'){
+        sfxShield();
+        attacker.shielded = true;
+        setLog(`${attacker.name} سپر گرفت! 🛡️`);
+        renderBattle();
+        setTimeout(afterEnemyStep, 500);
+      } else if(ab==='chameleonGuard'){
+        sfxShield(); attacker.damageReduction=0.5; setLog(`${attacker.name} استتار آفتابی گرفت؛ آسیب دریافتی نصف شد! 🦎🌈`); renderBattle(); setTimeout(afterEnemyStep,700);
+      } else if(ab==='bloodThorns'){
+        sfxShield(); attacker.thornCounter=3; setLog(`${attacker.name} سه ضربه بعدی را با خار خونین پس می‌فرستد! 🌹🩸`); renderBattle(); setTimeout(afterEnemyStep,700);
+      } else if(ab==='tearGas'){
+        sfxHit(); battle.player.filter(f=>f.curHp>0).forEach(f=>f.abilityDisabled=true); setLog(`${attacker.name} ابر اشک‌آور را پخش کرد؛ توانایی همه گل‌های تو تا پایان نبرد خاموش شد! 😭🧅`); renderBattle(); setTimeout(afterEnemyStep,800);
+      } else if(ab==='sporeCloud'){
+        sfxHit(); battle.player.filter(f=>f.curHp>0).forEach(f=>{f.poisonedTurns=3; dealDamage(attacker,f,Math.floor(attacker.atk*.55));}); setLog(`${attacker.name} ابر هاگ سمی پخش کرد! همه گل‌های تو مسموم شدند! ☠️🍄`); renderBattle(); setTimeout(afterEnemyStep,800);
+      } else if(ab==='cornBarrage'){
+        sfxHit(); const targets=battle.player.filter(f=>f.curHp>0); for(let i=0;i<3;i++){ if(!targets.length) break; const t=targets[Math.floor(Math.random()*targets.length)]; dealDamage(attacker,t,Math.max(6,Math.floor(attacker.atk*.62))); } setLog(`${attacker.name} رگبار سه‌تایی ذرت شلیک کرد! 🌽💥`); renderBattle(); setTimeout(afterEnemyStep,800);
+      } else if(ab==='tomatoFury'){
+        sfxHit(); attacker.atkBuff=1.75; setLog(`${attacker.name} وارد حالت خشم سرخ شد؛ قدرت حمله‌اش ۷۵٪ بیشتر شد! 🍅🔥`); renderBattle(); setTimeout(afterEnemyStep,700);
+      } else if(ab==='potatoArmor'){
+        sfxShield(); attacker.shielded=true; attacker.damageReduction=.7; setLog(`${attacker.name} زره سنگین فعال کرد؛ آسیب دریافتی ۷۰٪ کمتر شد! 🥔🛡️`); renderBattle(); setTimeout(afterEnemyStep,700);
+      } else if(ab==='garlicShield'){
+        sfxShield(); battle.enemy.filter(f=>f.curHp>0).forEach(f=>{f.shielded=true; f.damageReduction=.35;}); setLog(`${attacker.name} سپر سیر را روی کل تیمش فعال کرد! 🧄🛡️`); renderBattle(); setTimeout(afterEnemyStep,800);
+      } else if(ab==='magicGrowth'){
+        sfxHeal(); attacker.curHp=Math.min(attacker.maxHp,attacker.curHp+Math.floor(attacker.maxHp*.45)); popText(attacker,'+45% HP 🫘✨',true); refreshHp(attacker); setLog(`${attacker.name} با رشد جادویی خودش را تقویت کرد! 🫘✨`); renderBattle(); setTimeout(afterEnemyStep,700);
+      } else if(ab==='ancientRevive'){
+        sfxHeal(); const dead=battle.enemy.filter(f=>f.curHp<=0||f.alive===false); dead.forEach(f=>{f.curHp=Math.max(1,Math.floor(f.maxHp*.25));f.alive=true;f.shielded=false;f.poisonedTurns=0;f.abilityDisabled=false;}); setLog(dead.length?`${attacker.name} با ریشه‌های باستانی ${dead.length} یار را با ۲۵٪ جان برگرداند! 🌳✨`:`ریشه‌های باستانی فراخوانده شد، اما یار مرده‌ای نبود. 🌳`); renderBattle(); setTimeout(afterEnemyStep,900);
+      } else if(ab==='iceFreeze' || ab==='deepSleep'){
+        sfxHit(); target.skipTurns=1; setLog(`${attacker.name} ${target.name} را از نوبت بعدی محروم کرد! ❄️😴`); renderBattle(); setTimeout(afterEnemyStep,700);
+      } else if(ab==='carrotShot'){
+        sfxHit(); dealDamage(attacker,target,Math.floor(attacker.atk*2.35)); setLog(`${attacker.name} شلیک دقیق زد! 🎯🥕`); renderBattle(); setTimeout(afterEnemyStep,700);
+      } else if(ab==='watermelonBlast'){
+        sfxExplosion(); const d=Math.max(30,Math.floor(attacker.atk*2.2)); dealDamage(attacker,target,d); attacker.curHp=0; attacker.alive=false; setLog(`${attacker.name} منفجر شد و ${d} آسیب زد! 💥🍉`); renderBattle(); setTimeout(()=>{if(checkGameOver())return;afterEnemyStep();},700);
+      } else if(ab==='berryDrain'){
+        sfxHit(); const d=Math.floor(attacker.atk*1.5); dealDamage(attacker,target,d); attacker.curHp=Math.min(attacker.maxHp,attacker.curHp+Math.floor(d*.35)); popText(attacker,'+'+Math.floor(d*.35)+' ❤️',true); refreshHp(attacker); setLog(`${attacker.name} بخشی از جان ${target.name} را دزدید! 🍓🩸`); renderBattle(); setTimeout(afterEnemyStep,700);
+      } else if(ab==='coconutSmash'){
+        sfxHit(); const d=Math.floor(attacker.atk*2); dealDamage(attacker,target,d); target.skipTurns=1; setLog(`${attacker.name} ضربه نارگیلی زد و ${target.name} را گیج کرد! 🥥💥`); renderBattle(); setTimeout(afterEnemyStep,700);
+      } else {
+        // Fallback: any ability not modeled above still lands a normal hit so the turn can never freeze.
+        sfxHit();
+        dealDamage(attacker, target, attacker.atk + Math.floor(Math.random()*6));
+        setTimeout(afterEnemyStep, 420);
+      }
+      }
+    } else {
+      sfxHit;
+      dealDamage(attacker, target, attacker.atk + Math.floor(Math.random()*6));
+      setTimeout(afterEnemyStep, 420);
+    }
+  }, 260);
+}
+function afterEnemyStep(){
+  if(checkGameOver()) return;
+  battle.locked = false;
+  renderAllyPicker(); updateActionButtons(); updateHint();
+}
+
+/* ---------- Game over ---------- */
+function checkGameOver(){
+  const playerAlive = battle.player.some(f=>f.curHp>0);
+  const enemyAlive = battle.enemy.some(f=>f.curHp>0);
+  if(!playerAlive || !enemyAlive){
+    battle.locked = true;
+    const won = playerAlive && !enemyAlive;
+    setTimeout(()=> finishBattle(won), 500);
+    return true;
+  }
+  return false;
+}
+async function finishBattle(won){
+  let reward;
+  if(won){
+    reward = 25 + Math.floor(Math.random()*16);
+    account.coins += reward;
+    account.wins += 1;
+  } else {
+    reward = 8;
+    account.coins += reward;
+    account.losses += 1;
+  }
+  await saveAccount(currentUser, account);
+  showResult(won, reward);
+}
+function showResult(won, reward){
+  showScreen('result');
+  document.getElementById('resultIcon').textContent = won ? '🏆' : '😵';
+  document.getElementById('resultTitle').textContent = won ? 'پیروزی!' : 'شکست!';
+  document.getElementById('resultSub').textContent = won ? 'تیم گل‌های تو برنده شد' : 'تیم حریف این‌بار برد';
+  document.getElementById('resultQuote').textContent = '«' + randomLine(won?VICTORY_LINES:DEFEAT_LINES) + '»';
+  document.getElementById('rewardLine').textContent = `+${reward} 🪙 سکه گرفتی`;
+  if(won){ sfxVictory(); launchConfetti(); } else { sfxDefeat(); }
+}
+function launchConfetti(){
+  const colors = ['#FF6E5A','#FFC24B','#3FA672','#5AC8E8','#9C6AE0'];
+  for(let i=0;i<40;i++){
+    const c = document.createElement('div');
+    c.className='confetti';
+    c.style.left = Math.random()*100+'%';
+    c.style.background = colors[Math.floor(Math.random()*colors.length)];
+    c.style.animationDuration = (2+Math.random()*1.5)+'s';
+    c.style.animationDelay = (Math.random()*0.6)+'s';
+    screens.result.appendChild(c);
+    setTimeout(()=>c.remove(), 4000);
+  }
+}
+document.getElementById('playAgainBtn').addEventListener('click', ()=>{
+  sfxClick();
+  selectedIds = [];
+  renderGrid(); renderSquadSlots();
+  showScreen('select');
+});
+</script>
+</body>
+</html>
